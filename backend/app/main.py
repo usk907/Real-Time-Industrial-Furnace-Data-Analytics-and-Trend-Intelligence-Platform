@@ -3,13 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config import settings
 from backend.app.router import router
 from backend.app.websocket_manager import ws_manager
+from backend.app.database import SessionLocal
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# Set all CORS enabled origins
+# Enable CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.BACKEND_CORS_ORIGINS,
@@ -18,16 +19,28 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register endpoints router
+# Programmatic database initialization and seeding on application startup
+@app.on_event("startup")
+def on_startup():
+    db = SessionLocal()
+    try:
+        from backend.app.seeder import init_and_seed_db
+        init_and_seed_db(db)
+    except Exception as e:
+        print(f"[STARTUP ERROR]: Database initialization failed: {e}")
+    finally:
+        db.close()
+
+# Register API routes
 app.include_router(router, prefix=settings.API_V1_STR)
 
-# Persistent WebSocket telemetry stream endpoint
+# Persistent WS connection route
 @app.websocket("/api/ws")
 async def websocket_endpoint(websocket: WebSocket):
     await ws_manager.connect(websocket)
     try:
         while True:
-            # Maintain active connection and process inbound client heartbeats
+            # Maintain socket link
             data = await websocket.receive_text()
     except WebSocketDisconnect:
         ws_manager.disconnect(websocket)

@@ -1,5 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import Column, Integer, String, Float, Boolean, DateTime, ForeignKey, Text, JSON
 from sqlalchemy.sql import func
 from backend.app.database import Base
 
@@ -7,7 +6,7 @@ class Role(Base):
     __tablename__ = "roles"
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False, unique=True)
-    permissions = Column(ARRAY(String), default=[])
+    permissions = Column(JSON, default=[])
 
 class User(Base):
     __tablename__ = "users"
@@ -39,8 +38,8 @@ class Equipment(Base):
     id = Column(Integer, primary_key=True, index=True)
     area_id = Column(Integer, ForeignKey("areas.id", ondelete="CASCADE"))
     name = Column(String(100), nullable=False)
-    type = Column(String(50), nullable=False)  # FURNACE, TRANSFORMER
-    status = Column(String(20), default="STOPPED")  # RUNNING, STOPPED, MAINTENANCE, ALARM
+    type = Column(String(50), nullable=False)
+    status = Column(String(20), default="STOPPED")
 
 class Sensor(Base):
     __tablename__ = "sensors"
@@ -55,8 +54,7 @@ class Sensor(Base):
     is_active = Column(Boolean, default=True)
 
 # -----------------------------------------------------
-# Time-Series Models (hypertables)
-# Note: Declarative models require composite keys since raw time-series lacks a standard primary key
+# Time-Series Models (hypertables if PostgreSQL/TimescaleDB)
 # -----------------------------------------------------
 class SensorReading(Base):
     __tablename__ = "sensor_readings"
