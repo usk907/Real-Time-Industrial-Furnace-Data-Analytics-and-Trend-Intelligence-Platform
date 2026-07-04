@@ -38,3 +38,7 @@ Thumbs.db
 .project
 .settings/
 .classpath
+
+# Local Databases
+furnace.db
+*.db

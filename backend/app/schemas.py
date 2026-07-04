@@ -1,9 +1,9 @@
 from pydantic import BaseModel, Field, EmailStr
-from datetime import datetime
+from datetime import datetime, date
 from typing import List, Optional
 
 # -----------------------------------------------------
-# User & Auth Schemas
+# Auth & User Schemas
 # -----------------------------------------------------
 class UserLogin(BaseModel):
     username: str
@@ -24,6 +24,12 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     password: str
 
+class UserUpdate(BaseModel):
+    email: Optional[EmailStr] = None
+    role_id: Optional[int] = None
+    is_active: Optional[bool] = None
+    password: Optional[str] = None
+
 class UserOut(UserBase):
     id: int
     created_at: datetime
@@ -31,7 +37,86 @@ class UserOut(UserBase):
         from_attributes = True
 
 # -----------------------------------------------------
-# Sensor & Telemetry Schemas
+# Plant Management Schemas
+# -----------------------------------------------------
+class PlantBase(BaseModel):
+    name: str
+    location: Optional[str] = None
+    timezone: Optional[str] = "UTC"
+    description: Optional[str] = None
+    status: Optional[str] = "ACTIVE"
+
+class PlantCreate(PlantBase):
+    pass
+
+class PlantOut(PlantBase):
+    id: int
+    created_at: datetime
+    class Config:
+        from_attributes = True
+
+# -----------------------------------------------------
+# Department Management Schemas
+# -----------------------------------------------------
+class DepartmentBase(BaseModel):
+    plant_id: int
+    name: str
+    description: Optional[str] = None
+
+class DepartmentCreate(DepartmentBase):
+    pass
+
+class DepartmentOut(DepartmentBase):
+    id: int
+    class Config:
+        from_attributes = True
+
+# -----------------------------------------------------
+# Machine Management Schemas
+# -----------------------------------------------------
+class MachineBase(BaseModel):
+    department_id: int
+    name: str
+    type: str
+    rated_capacity: Optional[float] = 0.0
+    status: Optional[str] = "STOPPED"
+
+class MachineCreate(MachineBase):
+    pass
+
+class MachineOut(MachineBase):
+    id: int
+    class Config:
+        from_attributes = True
+
+# -----------------------------------------------------
+# Device Management Schemas
+# -----------------------------------------------------
+class DeviceBase(BaseModel):
+    machine_id: int
+    name: str
+    type: str
+    register_address: str
+    unit: str
+    nominal_min: Optional[float] = None
+    nominal_max: Optional[float] = None
+    serial_number: Optional[str] = None
+    firmware_version: Optional[str] = None
+    communication_status: Optional[str] = "ONLINE"
+    is_active: Optional[bool] = True
+
+class DeviceCreate(DeviceBase):
+    pass
+
+class DeviceOut(DeviceBase):
+    id: int
+    last_seen: datetime
+    installation_date: datetime
+    class Config:
+        from_attributes = True
+
+# -----------------------------------------------------
+# Telemetry Schemas
 # -----------------------------------------------------
 class RawTelemetryRecord(BaseModel):
     timestamp: datetime
@@ -52,41 +137,9 @@ class ReadingOut(BaseModel):
     class Config:
         from_attributes = True
 
-class SensorOut(BaseModel):
-    id: int
-    equipment_id: int
-    name: str
-    type: str
-    register_address: str
-    unit: str
-    nominal_min: Optional[float] = None
-    nominal_max: Optional[float] = None
-    is_active: bool
-    class Config:
-        from_attributes = True
-
-class EquipmentOut(BaseModel):
-    id: int
-    area_id: int
-    name: str
-    type: str
-    status: str
-    class Config:
-        from_attributes = True
-
 # -----------------------------------------------------
-# Analytics & KPI Schemas
+# Alarm Schemas
 # -----------------------------------------------------
-class KPICardOut(BaseModel):
-    grid_power_kw: float
-    voltage_v: float
-    current_a: float
-    power_factor: float
-    transformer_load_pct: float
-    frequency_hz: float
-    energy_consumption_kwh: float
-    running_furnace_count: int
-
 class AlarmOut(BaseModel):
     id: int
     time: datetime
@@ -105,16 +158,9 @@ class AlarmAcknowledge(BaseModel):
     acknowledged_by: str
     comments: str
 
-class PredictionOut(BaseModel):
-    time: datetime
-    prediction_horizon_minutes: int
-    sensor_id: int
-    predicted_value: float
-    upper_bound: Optional[float] = None
-    lower_bound: Optional[float] = None
-    class Config:
-        from_attributes = True
-
+# -----------------------------------------------------
+# Report Schemas
+# -----------------------------------------------------
 class ReportOut(BaseModel):
     id: int
     created_at: datetime
@@ -122,5 +168,36 @@ class ReportOut(BaseModel):
     report_type: str
     format: str
     file_path: str
+    class Config:
+        from_attributes = True
+
+# -----------------------------------------------------
+# Setting & Log Schemas
+# -----------------------------------------------------
+class SystemSettingOut(BaseModel):
+    key: str
+    value: str
+    description: Optional[str] = None
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class AuditLogOut(BaseModel):
+    id: int
+    time: datetime
+    user_id: Optional[int] = None
+    action: str
+    details: Optional[str] = None
+    ip_address: Optional[str] = None
+    class Config:
+        from_attributes = True
+
+class NotificationOut(BaseModel):
+    id: int
+    user_id: int
+    message: str
+    type: str
+    read: bool
+    created_at: datetime
     class Config:
         from_attributes = True

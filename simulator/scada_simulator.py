@@ -2,13 +2,14 @@ import time
 import random
 import requests
 import os
+import math
 
 # Ingestion target configurations
 BACKEND_HOST = os.getenv("BACKEND_HOST", "localhost")
 BACKEND_PORT = os.getenv("BACKEND_PORT", "8000")
 API_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/api/readings/bulk"
 
-# Exact list of 50 sensors seeded in the database
+# Exact list of 60 devices seeded in the database
 SENSORS_METADATA = [
     # Grid & Distribution (1 - 16)
     {"id": 1, "name": "CB5214 kW", "unit": "kW", "base": 22860.0},
@@ -68,96 +69,146 @@ SENSORS_METADATA = [
     {"id": 47, "name": "Avg. P.F.", "unit": "", "base": 0.929},
     {"id": 48, "name": "Load Factor", "unit": "", "base": 23.279},
     {"id": 49, "name": "Grid Export kWh", "unit": "kWh", "base": 130136.0},
-    {"id": 50, "name": "Grid Export kVah", "unit": "kVah", "base": 148800.0}
+    {"id": 50, "name": "Grid Export kVah", "unit": "kVah", "base": 148800.0},
+
+    # Physical Analytics Sensors (51 - 60)
+    {"id": 51, "name": "SMS-1 Furnace Temp", "unit": "°C", "base": 1520.0},
+    {"id": 52, "name": "SMS-1 Furnace Pressure", "unit": "bar", "base": 1.2},
+    {"id": 53, "name": "SMS-1 Cooling Water Flow", "unit": "m³/h", "base": 250.0},
+    {"id": 54, "name": "TG-2 Turbine RPM", "unit": "RPM", "base": 3000.0},
+    {"id": 55, "name": "CB5214 Voltage", "unit": "V", "base": 11000.0},
+    {"id": 56, "name": "CB5214 Current", "unit": "A", "base": 240.0},
+    {"id": 57, "name": "SMS Ambient Humidity", "unit": "%", "base": 55.0},
+    {"id": 58, "name": "SMS Carbon Dioxide (CO2)", "unit": "ppm", "base": 400.0},
+    {"id": 59, "name": "SMS-1 Production Count", "unit": "heats", "base": 12.0},
+    {"id": 60, "name": "SMS-4 Gas Level (CO)", "unit": "ppm", "base": 15.0}
 ]
 
 # Keep track of active values for simulation variations
 current_values = {s["id"]: s["base"] for s in SENSORS_METADATA}
 
-# Increments accumulators based on current power load (kW * (1s / 3600s))
 def update_consumption_accumulators():
-    # Grid Import kWh increments trailing the circuit breaker loads (CB5214 + CB14)
     cb_power = current_values[1] + current_values[2]
     increment_kwh = cb_power * (1.0 / 3600.0)
     
-    current_values[45] += increment_kwh # Import kWh
-    current_values[46] += (increment_kwh / 0.929) # Import kVah (assuming PF = 0.929)
+    current_values[45] += increment_kwh
+    current_values[46] += (increment_kwh / 0.929)
     
-    # Grid Export kWh increments trailing Turbine Generator output (TG-2 + TG-3)
     tg_power = current_values[41] + current_values[42]
     export_increment = tg_power * (1.0 / 3600.0)
     
-    current_values[49] += export_increment # Export kWh
-    current_values[50] += (export_increment / 0.94) # Export kVah
+    current_values[49] += export_increment
+    current_values[50] += (export_increment / 0.94)
 
 def main_loop():
     tick = 0
-    print(f"Simulator starting. Posting to: {API_URL}")
+    print(f"SCADA Simulator starting. Target API: {API_URL}")
     
     while True:
         tick += 1
         timestamp = time.strftime("%Y-%m-%dT%H:%M:%S.000Z", time.gmtime())
         
-        # 1. Fluctuating Turbine Generators
-        # TG-2 (30MW limit) & TG-3 (33MW limit) run at high capacities
-        current_values[41] = 29200.0 + random.normalvariate(0, 50)  # TG-2
-        current_values[42] = 32500.0 + random.normalvariate(0, 80)  # TG-3
+        # 1. Apply baseline random fluctuation to all sensors to simulate background noise and prevent frozen alarms
+        for sensor in SENSORS_METADATA:
+            s_id = sensor["id"]
+            base = sensor["base"]
+            # Generate a subtle random walk/variation from base
+            if base == 0.0:
+                if s_id in [4, 5, 13, 14, 40, 43, 44]:
+                    # standby loads instead of flat zero
+                    current_values[s_id] = round(abs(random.normalvariate(200.0, 15.0)), 2)
+                elif s_id == 9:
+                    # state change
+                    current_values[s_id] = float(random.choice([0, 1]))
+                else:
+                    current_values[s_id] = round(abs(random.normalvariate(0.5, 0.05)), 3)
+            else:
+                # Add small noise (0.2% - 1%)
+                noise = random.normalvariate(0, max(base * 0.003, 0.05))
+                current_values[s_id] = round(base + noise, 3)
+
+        # 2. Physics Engine Overrides
+        # Turbines (Power, RPM)
+        current_values[41] = round(29200.0 + random.normalvariate(0, 50), 3)  # TG-2 kW
+        current_values[42] = round(32500.0 + random.normalvariate(0, 80), 3)  # TG-3 kW
+        current_values[54] = round(3000.0 + random.normalvariate(0, 15), 1)   # TG-2 RPM
         
-        # 2. Fluctuating Breaker Loads (CB5214 & CB14)
-        current_values[1] = 22860.0 + random.normalvariate(0, 100) # CB5214
-        current_values[2] = 19888.0 + random.normalvariate(0, 80)  # CB14
-        current_values[3] = 11939.0 + random.normalvariate(0, 50)  # CB52G4
+        # Breakers (Power, Voltage, Current)
+        current_values[1] = round(22860.0 + random.normalvariate(0, 100), 3) # CB5214 kW
+        current_values[2] = round(19888.0 + random.normalvariate(0, 80), 3)  # CB14 kW
+        current_values[3] = round(11939.0 + random.normalvariate(0, 50), 3)  # CB52G4 kW
         
-        # 3. SMS-4 Furnace loads (Furnace 1 to 4)
-        current_values[25] = 6573.0 + random.normalvariate(0, 30)  # Fur-1 kW
-        current_values[29] = 4662.0 + random.normalvariate(0, 40)  # Fur-2 kW
-        current_values[33] = 7586.0 + random.normalvariate(0, 20)  # Fur-3 kW
-        current_values[37] = 7342.0 + random.normalvariate(0, 35)  # Fur-4 kW
+        # CB5214 Voltage floats around 11,000 V
+        current_values[55] = round(11000.0 + random.normalvariate(0, 35), 2)
+        # Current calculated from Power & Voltage (I = P / (V * sqrt(3) * PF))
+        power_factor = 0.929
+        current_values[56] = round((current_values[1] * 1000.0) / (current_values[55] * math.sqrt(3.0) * power_factor), 2)
         
-        # Dynamic recalculation of SMS running power sum
+        # SMS-4 Furnace loads
+        current_values[25] = round(6573.0 + random.normalvariate(0, 30), 3)  # Fur-1 kW
+        current_values[29] = round(4662.0 + random.normalvariate(0, 40), 3)  # Fur-2 kW
+        current_values[33] = round(7586.0 + random.normalvariate(0, 20), 3)  # Fur-3 kW
+        current_values[37] = round(7342.0 + random.normalvariate(0, 35), 3)  # Fur-4 kW
+        
         sms_4_run = current_values[25] + current_values[29] + current_values[33] + current_values[37]
-        current_values[22] = sms_4_run
+        current_values[22] = round(sms_4_run, 3)
+        current_values[23] = round((sms_4_run / current_values[21]) * 100.0, 3)
+        current_values[60] = round(15.0 + random.normalvariate(0, 1.2), 2)   # SMS-4 CO Gas Level
         
-        # SMS-4 Utl. Factor (%) = (Run Power / Avl Power) * 100
-        current_values[23] = (sms_4_run / current_values[21]) * 100.0
+        # SMS-1 Furnace details
+        current_values[19] = round(51135.0 + random.normalvariate(0, 150), 3)
+        current_values[7] = round(current_values[19] + current_values[22], 3) # Total SMS Running Power
         
-        # SMS-1 Run. Power averages around 51,135 kW
-        current_values[19] = 51135.0 + random.normalvariate(0, 150)
+        # SMS-1 Physical Indicators (Temperature, Pressure, Flow, CO2)
+        cycle_angle = (tick % 360) * (math.pi / 180.0)
+        current_values[51] = round(1550.0 + 80.0 * math.sin(cycle_angle) + random.normalvariate(0, 5.0), 1)
+        current_values[52] = round(1.25 + 0.15 * math.sin(cycle_angle) + random.normalvariate(0, 0.02), 3)
+        current_values[53] = round(250.0 + random.normalvariate(0, 2.0), 2)
+        current_values[57] = round(55.0 + 3.0 * math.sin(cycle_angle / 10.0) + random.normalvariate(0, 0.5), 1) # Humidity
+        current_values[58] = round(420.0 + 40.0 * math.sin(cycle_angle) + random.normalvariate(0, 10.0), 1) # CO2
         
-        # Total SMS running power = SMS-1 + SMS-4 running power
-        current_values[7] = current_values[19] + current_values[22]
+        # Production Count increments slowly (every 300 ticks / heats)
+        if tick % 300 == 0:
+            current_values[59] += 1
+            print(f"[PRODUCTION]: SMS-1 completed a new heat batch! Total heats: {int(current_values[59])}")
         
         # 4. Increment accumulators
         update_consumption_accumulators()
         
-        # -------------------------------------------------------------
-        # Periodical Anomaly Injections
-        # -------------------------------------------------------------
-        # Voltage/Current spikes mocked on Turbine loads
+        # 5. Periodical Anomaly Injections
         injected_msg = None
-        if tick % 150 == 0:
-            current_values[41] = 34500.0  # TG-2 Overload spike
-            injected_msg = "Overload Spike on TG-2 Turbine"
-        elif tick % 200 == 0:
-            current_values[1] = 48000.0   # Circuit Breaker surge
-            injected_msg = "Current Surge on Breaker CB5214"
+        if tick % 180 == 0:
+            # Turbine TG-2 Overload Spike
+            current_values[41] = 34500.0  
+            current_values[54] = 4100.0   # Speed surge
+            injected_msg = "Overload Surge on TG-2 Turbine & RPM"
+        elif tick % 240 == 0:
+            # Circuit Breaker load surge
+            current_values[1] = 48500.0
+            injected_msg = "Current / Power Surge on Circuit Breaker CB5214"
+        elif tick % 320 == 0:
+            # Temperature spike warning (EAF overheating)
+            current_values[51] = 1750.0
+            injected_msg = "Critical Temperature Warning on SMS-1 furnace (>1700°C)"
             
         if injected_msg:
             print(f"[ANOMALY INJECTED]: {injected_msg}")
             
-        # Compile payload
+        # Compile payload list
         payload = []
         for sensor in SENSORS_METADATA:
             s_id = sensor["id"]
             val = current_values[s_id]
             
-            # Simple threshold check
+            # Simple threshold flags for simulator output logs
             status = "OK"
             if s_id in [1, 2] and val > 45000.0:
                 status = "HIGH_LIMIT"
             elif s_id == 41 and val > 30000.0:
                 status = "HIGH_LIMIT"
             elif s_id == 42 and val > 33000.0:
+                status = "HIGH_LIMIT"
+            elif s_id == 51 and val > 1700.0:
                 status = "HIGH_LIMIT"
                 
             payload.append({
@@ -171,11 +222,13 @@ def main_loop():
                 "status": status
             })
             
-        # Post to API backend
+        # Post bulk telemetry frame
         try:
             r = requests.post(API_URL, json=payload, timeout=2.0)
             if r.status_code in [200, 201]:
-                print(f"[{timestamp}] Successfully posted {len(payload)} SCADA signals. API: {r.status_code}")
+                # Log success details periodically to avoid flooding logs
+                if tick % 5 == 0:
+                    print(f"[{timestamp}] Successfully posted {len(payload)} SCADA signals. API: {r.status_code}")
             else:
                 print(f"[{timestamp}] Ingestion Error. API Status: {r.status_code}")
         except requests.exceptions.RequestException as e:
@@ -184,5 +237,5 @@ def main_loop():
         time.sleep(1.0)
 
 if __name__ == "__main__":
-    time.sleep(2.0)  # Wait for backend initialization
+    time.sleep(5.0)  # Wait for backend and database setup in Docker Compose
     main_loop()

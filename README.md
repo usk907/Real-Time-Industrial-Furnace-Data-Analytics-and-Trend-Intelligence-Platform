@@ -1,115 +1,140 @@
-# Real-Time Industrial Furnace Data Analytics and Trend Intelligence Platform
+# Industrial Energy Intelligence Platform (IEIP)
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg?style=flat-square&logo=python)](https://www.python.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0-emerald.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18.2.0-blue.svg?style=flat-square&logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.1.6-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-blue.svg?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
-[![Apache ECharts](https://img.shields.io/badge/Apache_ECharts-5.4.2-red.svg?style=flat-square&logo=apache)](https://echarts.apache.org/)
+[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL_15-blue.svg?style=flat-square&logo=postgresql)](https://www.timescale.com/)
+[![InfluxDB](https://img.shields.io/badge/InfluxDB-2.7-orange.svg?style=flat-square&logo=influxdb)](https://www.influxdata.com/)
+[![Redis](https://img.shields.io/badge/Redis-7.0-red.svg?style=flat-square&logo=redis)](https://redis.io/)
 
-A high-performance, enterprise-grade industrial analytics and real-time monitoring overlay for steel melting shops (SMS) and power substations. The platform ingests 1 Hz telemetry streams from SCADA systems (supporting OPC UA and Modbus TCP pathways), computes dynamic performance KPIs, executes inline anomaly checks, runs regression forecasts, and displays high-density control-room dashboards.
-
----
-
-## 🖥️ Platform Visual Layouts
-
-The application user interface is custom-aligned to match professional SCADA dashboards:
-* **Data Monitor Tab**: Renders high-contrast rounded parameter tables with yellow headers (**Distribution Parameters**, **SMS-1 Furnace Parameters**, and **SMS-4 Furnace Parameters**) displaying circuit breaker loads, allocated sets, and Ladle/Burner priorities.
-* **Trends Tab**: Features an interactive **"Set Parameter Selection" checkboxes modal** to customize and overlay multi-series chart compare trends.
-* **Consumption Tab**: Renders a comprehensive 42-parameter audit table showing active grid import/export kWh levels, average power factors, and furnace auxiliary accumulations.
+IEIP is a production-quality, modular, and containerized Industrial Energy Monitoring and Analytics Web Application. Inspired by SCADA platforms like Crystal e View, it provides a sleek, high-contrast, dark-themed control-room dashboard built on a modern, decoupled architecture designed for high-density telemetry streams.
 
 ---
 
-## 🏗️ System Architecture
+## 🏗️ System Architecture & Dual-Database Strategy
 
-```
-         [ SCADA / PLC Registers ] 
-                     │  (1 Hz Telemetry)
-                     ▼
-         [ simulator/scada_simulator.py ]
-                     │  (HTTP POST /api/readings/bulk)
-                     ▼
-         [ backend/ (FastAPI Web Services) ] <───> [ local/PostgreSQL ]
-                     │  (WebSocket telemetry stream /api/ws)
-                     ▼
-         [ frontend/ (Vite + React + TS Dashboard) ]
-```
-
-* **SCADA Simulator**: Emulates turbine generators (`TG-1` to `TG-5`), circuit breakers (`CB5214`, `CB14`), and melting shops (`SMS-1` & `SMS-4`) heat cycle physics with periodic anomaly injections (overloads, spikes).
-* **FastAPI Backend**: Orchestrates API ingestion, tracks breaker limits, calculates rolling load factors, compiles CSV summaries, and broadcasts frames over WebSockets.
-* **React Frontend**: High-density control-room theme with electric blue accents, responsive layouts (including desktop sidebars and mobile bottom tabs), custom SVG dials, and ref-based ECharts.
+The platform separates fast ingestion paths from heavy query loads by implementing a **dual-database write pipeline**:
+1. **InfluxDB 2.7**: Stores raw, high-volume time-series telemetry points. Advanced aggregations, resolution resampling, and downsampling are executed directly on InfluxDB using Flux queries.
+2. **TimescaleDB / PostgreSQL 15**: Manages relational metadata (plants, departments, machines, devices, users, roles), logs alarms, system events, audit trails, and holds a cache of the last-seen telemetry value.
+3. **Redis 7.0**: Acts as an active session cache for JWT token blacklists and as a broker for live WebSocket telemetry broadcasts.
 
 ---
 
-## 📁 Repository Directory Structure
+## 🖥️ Directory Structure
 
 ```text
-├── start_platform.bat             # Unified Windows Local Host Launcher
-├── .gitignore                     # Git ignore rules for node modules and venv
-├── README.md                      # Platform overview and setup guidelines
+├── .env                           # Environment variables config
+├── README.md                      # Platform documentation
+├── view_db.py                     # Database inspector CLI tool
 │
 ├── database/
-│   └── init-db.sql                # Robust SQL DDL & Seed values (runs with or without TimescaleDB)
+│   └── init-db.sql                # Relational schemas & Seed metadata
 │
 ├── backend/
-│   ├── requirements.txt           # Python backend dependencies
+│   ├── requirements.txt           # Python dependencies
 │   └── app/
-│       ├── main.py                # FastAPI entry point
-│       ├── config.py              # Settings wrapper
-│       ├── database.py            # SQLAlchemy Connection Pool Setup
-│       ├── models.py              # Database models mapping
+│       ├── main.py                # FastAPI entrypoint
+│       ├── config.py              # Environment configuration loader
+│       ├── database.py            # Database engine setup
+│       ├── models.py              # SQLAlchemy DB models
 │       ├── schemas.py             # Pydantic validation schemas
-│       ├── auth.py                # Crypt & token wrappers
-│       ├── router.py              # REST controllers, KPI engines, and alerts
-│       └── websocket_manager.py   # WebSocket Client Connection coordinator
+│       ├── auth.py                # JWT authentication & Redis blacklisting
+│       ├── router.py              # REST API controllers & KPI engine
+│       ├── influx_client.py       # InfluxDB connection client
+│       └── websocket_manager.py   # WebSocket broadcast manager
 │
 ├── simulator/
-│   ├── requirements.txt
-│   └── scada_simulator.py         # 1 Hz SCADA telemetry simulator client
+│   ├── requirements.txt           # Simulator Python requirements
+│   └── scada_simulator.py         # 1 Hz SCADA simulator posting raw tag records
 │
 └── frontend/
-    ├── package.json               # Node dev requirements
-    ├── postcss.config.js
-    ├── tailwind.config.js         # Tailwind Utility styling config
-    ├── tsconfig.json              # TypeScript specifications
-    ├── index.html
+    ├── package.json               # Node dependencies (Vite, TS, Framer, ECharts)
     └── src/
-        ├── main.tsx
-        ├── index.css              # Custom scrollbars and styling rules
-        └── App.tsx                # Control room dashboard and custom gauges
+        ├── main.tsx               # SPA bootstrapper
+        ├── index.css              # Custom styling & scrollbars
+        ├── App.tsx                # Client routes & layouts
+        ├── context/
+        │   └── AuthContext.tsx    # Auth state & WebSocket telemetry context
+        ├── components/
+        │   ├── Sidebar.tsx        # Collapsible dark navigation sidebar
+        │   └── Header.tsx         # Top bar with profile & alarm notifications
+        └── pages/
+            ├── Login.tsx          # Stunning login screen with credentials help
+            ├── Dashboard.tsx      # Gauges, live charts, and KPI widgets
+            ├── LiveMonitoring.tsx # 1 Hz table displaying all 60 tag registers
+            ├── Trends.tsx         # InfluxDB-based ECharts queries & comparisons
+            ├── Analytics.tsx      # Utilization indices, carbon & cost rollups
+            ├── Alarms.tsx         # Acknowledge critical alarm alerts
+            ├── Reports.tsx        # Compile and download Daily/Weekly reports
+            ├── Management.tsx     # CRUD modal screens for all resources
+            └── Settings.tsx       # Safety range thresholds & Audit log display
 ```
 
 ---
 
-## 🚀 Local Host Installation & Run Steps
+## 🚀 Execution & Quick Start
+**Prerequisites**: Python 3.10+ and Node.js 18+ installed on your host system.
 
-### Prerequisite: Database Initialization
-Initialize a PostgreSQL instance containing a database named `furnace_db` on port `5432` with username `admin` and password `securepassword`. Execute the initialization script to seed metadata:
+Open three separate terminal windows in the project root:
+
+1. **Start the FastAPI Backend**:
+   ```bash
+   cd backend
+   python -m venv venv
+   .\venv\Scripts\activate      # On Windows (or source venv/bin/activate on Linux/macOS)
+   pip install -r requirements.txt
+   cd ..
+   .\backend\venv\Scripts\uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
+   ```
+2. **Start the Telemetry Simulator**:
+   ```bash
+   .\simulator\venv\Scripts\python .\simulator\scada_simulator.py
+   ```
+3. **Start the React Frontend**:
+   ```bash
+   cd frontend
+   npm install
+   npm run dev
+   ```
+   Open **`http://localhost:5173/`** to view the live dashboard.
+
+---
+
+## 🗄️ Database Configuration & Inspection
+
+### 1. MySQL Setup
+By default, if no external database is detected, the backend falls back to local SQLite (`furnace.db`). To link your local MySQL instance:
+1. Open the `.env` file in the project root.
+2. Update the `DATABASE_URL` variable. Note that if your password contains special characters like `@`, it must be percent-encoded:
+   ```ini
+   DATABASE_URL=mysql+pymysql://<user>:<encoded_password>@127.0.0.1:3306/furnace_db
+   ```
+3. Establish your schema by running `CREATE DATABASE furnace_db;` in your MySQL console once. The backend will compile the schemas and seed all data automatically on next startup.
+
+### 2. Inspecting the Database (view_db.py)
+A CLI database inspector script is available in the root. Run it to inspect record counts and check live inputs in either SQLite or MySQL:
 ```bash
-psql -U admin -d furnace_db -f database/init-db.sql
+python view_db.py
 ```
-*Note: The script dynamically detects if the TimescaleDB extension is active on your server. If it is missing, it falls back to standard indexing, ensuring compatibility on standard PostgreSQL environments.*
-
-### Launching the Platform
-To launch all services (Backend, SCADA Simulator, and Frontend Client) simultaneously:
-1. Double-click the root file: **`start_platform.bat`**.
-2. The batch script will automatically:
-   * Scaffold Python virtual environments in `backend/venv` and `simulator/venv`.
-   * Install python requirements from `requirements.txt`.
-   * Execute `npm install` inside the `frontend/` directory.
-   * Open three independent Command Prompt consoles running the live API, simulator, and Vite client.
-3. Open your browser and navigate to: **`http://localhost:3000`** to view the live dashboard!
 
 ---
 
-## 🔒 Security & User Management
+## 🔒 Security Profiles & Credentials
 
-* **Role-Based Access Control**: Standard profiles (`Administrator`, `Plant Engineer`, `Operator`, `Viewer`).
-* **Authentication**: Token-based JWT validation checking privileges before database updates or alarm acknowledgment operations.
-* **Fallback Simulation Support**: The SCADA simulator client uses direct endpoint calls, bypassing authentication to simplify local testing setups.
+The platform implements strict JWT authentication. Security checks are enforced via role validation:
+- **Admin**: Full access (CRUD on all plants, machines, devices, users, and modifying settings).
+- **Plant Manager**: Full CRUD access on plants/departments/machines, views reports, and acknowledges alarms.
+- **Engineer**: Read-only access to configurations, can register new machines, download reports, and acknowledge alarms.
+- **Operator**: Read-only dashboards and alarms log, can acknowledge alarms.
+- **Viewer**: Read-only dashboards.
+
+### Seed Verification Logins (Username / Password)
+- **Admin**: `admin` / `admin123`
+- *(New users can be registered dynamically via the Management tab by the administrator).*
 
 ---
 
-## 📜 License
+## 🔌 Future Protocols & AI Integration
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+- **Industrial Hardware Protocols**: The architecture is decoupled so that `scada_simulator.py` can be replaced with standard driver daemons (e.g. using `pymodbus` or `asyncua` for Modbus TCP/OPC-UA links) pointing to `/api/readings/bulk` without any modifications required on the backend database or frontend dashboards.
+- **AI Modules**: In `/api/analytics`, placeholder routes are prepared for LSTM-based anomaly detection, predictive remaining useful life (RUL) estimation on electrodes, and PatchTST transformer demand forecasting.
