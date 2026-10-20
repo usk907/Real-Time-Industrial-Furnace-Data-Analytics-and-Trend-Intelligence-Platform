@@ -4,7 +4,7 @@ Write-Host "   IEIP - Industrial Energy Intelligence Platform Launcher" -Foregro
 Write-Host "======================================================================" -ForegroundColor Cyan
 Write-Host ""
 
-$RootPath = $PSScriptRoot
+$RootPath = (Resolve-Path "$PSScriptRoot\..\..").Path
 Set-Location $RootPath
 
 # 1. Check Python Venvs
@@ -49,7 +49,7 @@ Write-Host " - Interactive API Docs:    http://localhost:8000/docs" -ForegroundC
 Write-Host " - TAP Ingestion Server:    http://localhost:8001" -ForegroundColor White
 Write-Host " - Live WebSocket Stream:   ws://localhost:8000/api/ws" -ForegroundColor White
 Write-Host ""
-Write-Host " * To expose to Mobile 4G/5G or Remote Web, run '.\tunnel.bat'" -ForegroundColor Gray
-Write-Host " * To stop all services cleanly, run '.\stop_local.bat'" -ForegroundColor Gray
+Write-Host " * To expose to Mobile 4G/5G or Remote Web, run 'scripts\windows\tunnel.bat'" -ForegroundColor Gray
+Write-Host " * To stop all services cleanly, run 'scripts\windows\stop_local.bat'" -ForegroundColor Gray
 Write-Host "======================================================================" -ForegroundColor Green
 Write-Host ""

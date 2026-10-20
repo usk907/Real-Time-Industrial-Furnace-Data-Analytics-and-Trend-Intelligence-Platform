@@ -2,15 +2,24 @@
 IEIP Unified System Diagnostics & Verification Suite
 Consolidates system connectivity, TAP ingestion server testing, and full page API verification.
 """
+import os
 import sys
 import time
 import requests
-from datetime import datetime, timezone, timedelta
 
-TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsImV4cCI6MTc5MDE3MjcxM30.wyTOGPz7-la7tcasQBUonkxB3Cd2baXPVjxEe_6hLXA'
-HEADERS = {"Authorization": f"Bearer {TOKEN}"}
-BACKEND_BASE = "http://127.0.0.1:8000"
-TAP_BASE = "http://127.0.0.1:8001"
+# Ensure repository root is on sys.path
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if REPO_ROOT not in sys.path:
+    sys.path.insert(0, REPO_ROOT)
+
+from tests.helpers import (
+    TOKEN,
+    HEADERS,
+    BACKEND_BASE_URL,
+    TAP_BASE_URL,
+    generate_sample_telemetry_batch,
+    get_test_session
+)
 
 def run_connectivity():
     """Runs basic database and core API connectivity checks."""
@@ -40,11 +49,11 @@ def run_connectivity():
 
     # 2. Backend REST API
     try:
-        r = requests.get(f"{BACKEND_BASE}/api/dashboard", headers=HEADERS, timeout=3)
+        r = requests.get(f"{BACKEND_BASE_URL}/api/dashboard", headers=HEADERS, timeout=3)
         if r.status_code == 200:
-            print(f"[2] FASTAPI BACKEND SERVER ({BACKEND_BASE}):")
+            print(f"[2] FASTAPI BACKEND SERVER ({BACKEND_BASE_URL}):")
             print("    --> Status: [ONLINE / ACTIVE - HTTP 200 OK]")
-            print(f"    --> Swagger UI: {BACKEND_BASE}/docs")
+            print(f"    --> Swagger UI: {BACKEND_BASE_URL}/docs")
         else:
             print(f"[2] FASTAPI BACKEND SERVER: [WARNING - HTTP {r.status_code}]")
     except Exception:
@@ -54,7 +63,7 @@ def run_connectivity():
 
     # 3. Energy Consumption API
     try:
-        r = requests.get(f"{BACKEND_BASE}/api/consumption", headers=HEADERS, timeout=3)
+        r = requests.get(f"{BACKEND_BASE_URL}/api/consumption", headers=HEADERS, timeout=3)
         if r.status_code == 200:
             data = r.json()
             kwh = data.get("summary", {}).get("total_active_kwh", 0)
@@ -75,9 +84,9 @@ def run_tap_pipeline():
     print("      IEIP PLATFORM: TAP SERVER & SQL PIPELINE VERIFICATION")
     print("=" * 70)
 
-    tap_health = f"{TAP_BASE}/tap/health"
-    tap_telemetry = f"{TAP_BASE}/tap/telemetry"
-    tap_stats = f"{TAP_BASE}/tap/stats"
+    tap_health = f"{TAP_BASE_URL}/tap/health"
+    tap_telemetry = f"{TAP_BASE_URL}/tap/telemetry"
+    tap_stats = f"{TAP_BASE_URL}/tap/stats"
 
     # Step 1: Health
     print("\n[Step 1] Checking TAP Server Health (Port 8001)...")
@@ -96,12 +105,7 @@ def run_tap_pipeline():
 
     # Step 2: Sample batch write
     print("\n[Step 2] Sending Test Telemetry Batch to TAP Server...")
-    now_iso = datetime.now(timezone.utc).isoformat()
-    test_batch = [
-        {"timestamp": now_iso, "sensor_id": 1, "sensor_name": "CB5214 kW", "plant": "Gary Steel Works", "unit": "kW", "value": 22890.5, "quality": "GOOD", "status": "OK"},
-        {"timestamp": now_iso, "sensor_id": 41, "sensor_name": "30MW TG-2 kW", "plant": "Gary Steel Works", "unit": "kW", "value": 29210.0, "quality": "GOOD", "status": "OK"},
-        {"timestamp": now_iso, "sensor_id": 51, "sensor_name": "SMS-1 Furnace Temp", "plant": "Gary Steel Works", "unit": "°C", "value": 1582.4, "quality": "GOOD", "status": "OK"}
-    ]
+    test_batch = generate_sample_telemetry_batch()
     try:
         r = requests.post(tap_telemetry, json=test_batch, timeout=3)
         if r.status_code == 200:
@@ -135,7 +139,7 @@ def run_all_pages():
     print("      IEIP PLATFORM: COMPREHENSIVE PAGE API BENCHMARK")
     print("=" * 70)
 
-    session = requests.Session()
+    session = get_test_session()
     tests = [
         ("Executive Dashboard", "GET", "/api/dashboard", None),
         ("Notifications", "GET", "/api/notifications", None),
@@ -155,13 +159,13 @@ def run_all_pages():
 
     passed = 0
     for page, method, path, payload in tests:
-        url = f"{BACKEND_BASE}{path}"
+        url = f"{BACKEND_BASE_URL}{path}"
         start = time.time()
         try:
             if method == "GET":
-                r = session.get(url, headers=HEADERS, timeout=10)
+                r = session.get(url, timeout=10)
             else:
-                r = session.post(url, headers=HEADERS, json=payload, timeout=20)
+                r = session.post(url, json=payload, timeout=20)
             latency = round((time.time() - start) * 1000, 1)
             ok = r.status_code in [200, 201]
             status_str = "PASS" if ok else f"HTTP {r.status_code}"

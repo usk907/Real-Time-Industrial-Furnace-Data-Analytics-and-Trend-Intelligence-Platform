@@ -5,7 +5,9 @@ echo    IEIP - Industrial Energy Intelligence Platform Mobile APK Builder
 echo ======================================================================
 echo.
 
-cd /d "%~dp0frontend"
+:: Resolve project root directory (two levels up from scripts\windows)
+set "REPO_ROOT=%~dp0..\.."
+cd /d "%REPO_ROOT%\frontend"
 
 :: 1. Ensure production web assets are built
 echo [1/4] Compiling optimized React web application...
@@ -62,11 +64,12 @@ if exist "gradlew.bat" (
     call gradlew.bat assembleDebug
     if %ERRORLEVEL% equ 0 (
         if exist "app\build\outputs\apk\debug\app-debug.apk" (
-            copy "app\build\outputs\apk\debug\app-debug.apk" "..\..\IEIP-Mobile.apk" >nul
+            if not exist "%REPO_ROOT%\releases" mkdir "%REPO_ROOT%\releases"
+            copy /y "app\build\outputs\apk\debug\app-debug.apk" "%REPO_ROOT%\releases\IEIP-Mobile.apk" >nul
             echo.
             echo ======================================================================
-            echo  SUCCESS! Android APK built and saved to project root:
-            echo  file:///%~dp0IEIP-Mobile.apk
+            echo  SUCCESS! Android APK built and saved to:
+            echo  releases\IEIP-Mobile.apk
             echo ======================================================================
         )
     ) else (
@@ -76,5 +79,5 @@ if exist "gradlew.bat" (
     echo [ERROR] gradlew.bat not found inside android directory.
 )
 
-cd /d "%~dp0"
+cd /d "%REPO_ROOT%"
 pause

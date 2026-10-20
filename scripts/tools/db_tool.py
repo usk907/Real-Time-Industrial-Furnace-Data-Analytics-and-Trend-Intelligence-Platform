@@ -3,15 +3,20 @@ import os
 import sys
 from urllib.parse import urlparse, unquote
 
+REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+
 def load_db_url():
-    # Load DATABASE_URL from .env file
-    env_path = ".env"
-    if not os.path.exists(env_path):
-        return None
-    with open(env_path, "r") as f:
-        for line in f:
-            if line.strip().startswith("DATABASE_URL="):
-                return line.split("=", 1)[1].strip()
+    """Load DATABASE_URL from .env file checking CWD and repository root."""
+    candidate_paths = [
+        os.path.join(os.getcwd(), ".env"),
+        os.path.join(REPO_ROOT, ".env")
+    ]
+    for env_path in candidate_paths:
+        if os.path.exists(env_path):
+            with open(env_path, "r") as f:
+                for line in f:
+                    if line.strip().startswith("DATABASE_URL="):
+                        return line.split("=", 1)[1].strip()
     return None
 
 def get_db_connection():
@@ -35,9 +40,14 @@ def get_db_connection():
             connect_timeout=10
         ), "MySQL"
     else:
-        db_path = "furnace.db"
-        if not os.path.exists(db_path):
-            return None, f"Database file '{db_path}' not found."
+        # Check both cwd and repo root for furnace.db
+        candidate_db_paths = [
+            os.path.join(os.getcwd(), "furnace.db"),
+            os.path.join(REPO_ROOT, "furnace.db")
+        ]
+        db_path = next((p for p in candidate_db_paths if os.path.exists(p)), None)
+        if not db_path:
+            return None, "Database file 'furnace.db' not found."
         return sqlite3.connect(db_path), "SQLite"
 
 def execute_query(query: str):
