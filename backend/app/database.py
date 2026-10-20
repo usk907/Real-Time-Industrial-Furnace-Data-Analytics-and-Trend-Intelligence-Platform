@@ -10,7 +10,14 @@ if "postgresql" in database_url or "mysql" in database_url:
     try:
         # Test connection to check if it's online
         print(f"[DATABASE]: Testing connection to database at {database_url}...")
-        temp_engine = create_engine(database_url, pool_pre_ping=True)
+        temp_engine = create_engine(
+            database_url,
+            pool_pre_ping=True,
+            pool_size=25,
+            max_overflow=50,
+            pool_timeout=10,
+            pool_recycle=1800
+        )
         conn = temp_engine.connect()
         conn.close()
         engine = temp_engine

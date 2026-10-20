@@ -1,0 +1,139 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------
+  # 1. Main PostgreSQL / TimescaleDB Database
+  # ----------------------------------------------------
+  timescaledb:
+    image: timescale/timescaledb:latest-pg15
+    container_name: ieip_timescaledb
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-securepassword}
+      POSTGRES_DB: ${POSTGRES_DB:-furnace_db}
+    ports:
+      - "5432:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+      - ./database/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-admin} -d ${POSTGRES_DB:-furnace_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------
+  # 2. InfluxDB 2.7 Time-Series Historian
+  # ----------------------------------------------------
+  influxdb:
+    image: influxdb:2.7-alpine
+    container_name: ieip_influxdb
+    restart: unless-stopped
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ${POSTGRES_PASSWORD:-securepassword}
+      DOCKER_INFLUXDB_INIT_ORG: ${INFLUXDB_ORG:-ieip_org}
+      DOCKER_INFLUXDB_INIT_BUCKET: ${INFLUXDB_BUCKET:-furnace_telemetry}
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ${INFLUXDB_TOKEN:-my-super-secret-admin-token-1234567890}
+    volumes:
+      - influxdb_data:/var/lib/influxdb2
+
+  # ----------------------------------------------------
+  # 3. Redis In-Memory Token & State Cache
+  # ----------------------------------------------------
+  redis:
+    image: redis:7.0-alpine
+    container_name: ieip_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # ----------------------------------------------------
+  # 4. TAP Ingestion Server (Port 8001)
+  # ----------------------------------------------------
+  tap_server:
+    build:
+      context: .
+      dockerfile: tap_server/Dockerfile
+    container_name: ieip_tap_server
+    restart: unless-stopped
+    ports:
+      - "8001:8001"
+    environment:
+      TAP_SERVER_HOST: "0.0.0.0"
+      TAP_SERVER_PORT: 8001
+      DATABASE_URL: ${DATABASE_URL:-postgresql://admin:securepassword@timescaledb:5432/furnace_db}
+      TAP_DATABASE_URL: ${TAP_DATABASE_URL:-postgresql://admin:securepassword@timescaledb:5432/furnace_db}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+
+  # ----------------------------------------------------
+  # 5. Main Backend API (FastAPI Port 8000)
+  # ----------------------------------------------------
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ieip_backend
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://admin:securepassword@timescaledb:5432/furnace_db}
+      INFLUXDB_URL: http://influxdb:8086
+      INFLUXDB_TOKEN: ${INFLUXDB_TOKEN:-my-super-secret-admin-token-1234567890}
+      INFLUXDB_ORG: ${INFLUXDB_ORG:-ieip_org}
+      INFLUXDB_BUCKET: ${INFLUXDB_BUCKET:-furnace_telemetry}
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: ${SECRET_KEY:-SUPER_SECRET_INDUSTRIAL_KEY_9812A7C}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+    depends_on:
+      timescaledb:
+        condition: service_healthy
+      influxdb:
+        condition: service_started
+      redis:
+        condition: service_started
+
+  # ----------------------------------------------------
+  # 6. SCADA Telemetry Simulator (1 Hz Data Generator)
+  # ----------------------------------------------------
+  simulator:
+    build:
+      context: .
+      dockerfile: simulator/Dockerfile
+    container_name: ieip_simulator
+    restart: unless-stopped
+    environment:
+      TAP_HOST: tap_server
+      TAP_PORT: 8001
+      TAP_SERVER_URL: http://tap_server:8001/tap/telemetry
+    depends_on:
+      - tap_server
+      - backend
+
+  # ----------------------------------------------------
+  # 7. React + Vite Frontend (Nginx Reverse Proxy)
+  # ----------------------------------------------------
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: ieip_frontend
+    restart: unless-stopped
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
+
+volumes:
+  timescaledb_data:
+  influxdb_data:
+  redis_data:

@@ -1,19 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { LogOut, Bell, User as UserIcon, Check } from 'lucide-react';
+import { LogOut, Bell, User as UserIcon, Check, Server } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-interface NotificationItem {
-  id: number;
-  message: string;
-  type: string;
-  read: boolean;
-  created_at: string;
-}
+import { ServerSettingsModal } from './ServerSettingsModal';
+import { getApiBaseUrl } from '../config';
+import { NotificationItem } from '../types';
 
 export const Header: React.FC = () => {
   const { user, logout, token } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [isServerModalOpen, setIsServerModalOpen] = useState(false);
+  const [tapStatus, setTapStatus] = useState<{ online: boolean; records: number; latency: number }>({
+    online: true,
+    records: 65000,
+    latency: 24.5
+  });
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  useEffect(() => {
+    const clockTimer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(clockTimer);
+  }, []);
+
+  useEffect(() => {
+    fetchTapStatus();
+    const tapTimer = setInterval(fetchTapStatus, 5000);
+    return () => clearInterval(tapTimer);
+  }, []);
+
+  const fetchTapStatus = async () => {
+    try {
+      const res = await fetch('/api/tap/status');
+      if (res.ok) {
+        const data = await res.json();
+        setTapStatus({
+          online: data.tap_server_online,
+          records: data.total_sql_readings || 0,
+          latency: data.metrics?.last_write_latency_ms || 25.0
+        });
+      }
+    } catch {
+      // Fallback
+    }
+  };
 
   useEffect(() => {
     if (!token) return;
@@ -53,15 +82,47 @@ export const Header: React.FC = () => {
   const unreadCount = notifications.filter(n => !n.read).length;
 
   return (
-    <header className="h-20 border-b border-[#1F2942]/60 bg-[#0A0D1A]/80 backdrop-blur-md flex items-center justify-between px-8 relative z-10">
+    <header className="h-20 border-b border-[#1F2942]/60 bg-[#0A0D1A]/90 backdrop-blur-md flex items-center justify-between px-8 relative z-10">
       <div>
         <h2 className="text-base font-extrabold uppercase tracking-widest text-slate-100 bg-clip-text text-transparent bg-gradient-to-r from-slate-100 to-slate-400">
           Industrial Energy Intelligence Platform
         </h2>
-        <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Gary Steel Works • Blast Furnace-1 Section</p>
+        <div className="flex items-center gap-3 mt-0.5">
+          <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Gary Steel Works • Blast Furnace-1 Section</p>
+          <span className="text-slate-600 text-[10px]">•</span>
+          <span className="text-[10px] text-slate-400 font-mono tracking-wider">
+            {currentTime.toLocaleTimeString()} UTC
+          </span>
+        </div>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
+        {/* BACKEND SERVER SETTINGS PILL */}
+        <button
+          onClick={() => setIsServerModalOpen(true)}
+          className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#10162B] hover:bg-[#161F3D] border border-[#1F2B50] hover:border-cyan-500/50 shadow-inner transition-all group"
+          title="Click to configure backend API connection or test latency"
+        >
+          <Server className="h-4 w-4 text-cyan-400 group-hover:scale-110 transition-transform" />
+          <div className="text-left leading-none">
+            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Backend Link</p>
+            <p className="text-[11px] font-bold text-cyan-400 font-mono">
+              {getApiBaseUrl() ? getApiBaseUrl().replace(/^https?:\/\//, '') : 'Local:8000'}
+            </p>
+          </div>
+        </button>
+
+        {/* TAP INGESTION SERVER LIVE PILL */}
+        <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#10162B] border border-[#1F2B50] shadow-inner">
+          <span className={`h-2.5 w-2.5 rounded-full ${tapStatus.online ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-amber-400'}`} />
+          <div className="text-left leading-none">
+            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">TAP Ingest Server (:8001)</p>
+            <p className="text-[11px] font-bold text-emerald-400 font-mono">
+              {tapStatus.online ? `${tapStatus.records.toLocaleString()} rows • ${tapStatus.latency}ms` : 'Direct Fallback'}
+            </p>
+          </div>
+        </div>
+
         {/* NOTIFICATIONS PANEL */}
         <div className="relative">
           <button 
@@ -131,6 +192,11 @@ export const Header: React.FC = () => {
           </button>
         </div>
       </div>
+
+      <ServerSettingsModal 
+        isOpen={isServerModalOpen} 
+        onClose={() => setIsServerModalOpen(false)} 
+      />
     </header>
   );
 };

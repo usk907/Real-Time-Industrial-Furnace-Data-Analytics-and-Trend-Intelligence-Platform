@@ -4,10 +4,12 @@ import requests
 import os
 import math
 
-# Ingestion target configurations
-BACKEND_HOST = os.getenv("BACKEND_HOST", "localhost")
-BACKEND_PORT = os.getenv("BACKEND_PORT", "8000")
-API_URL = f"http://{BACKEND_HOST}:{BACKEND_PORT}/api/readings/bulk"
+# Ingestion target configurations (TAP Server on Port 8001 with Backend 8000 fallback)
+TAP_HOST = os.getenv("TAP_HOST", "127.0.0.1")
+TAP_PORT = os.getenv("TAP_PORT", "8001")
+TAP_URL = os.getenv("TAP_SERVER_URL", f"http://{TAP_HOST}:{TAP_PORT}/tap/telemetry")
+BACKEND_FALLBACK_URL = f"http://{TAP_HOST}:8000/api/readings/bulk"
+API_URL = TAP_URL
 
 # Exact list of 60 devices seeded in the database
 SENSORS_METADATA = [
@@ -103,6 +105,9 @@ def update_consumption_accumulators():
 def main_loop():
     tick = 0
     print(f"SCADA Simulator starting. Target API: {API_URL}")
+    session = requests.Session()
+    adapter = requests.adapters.HTTPAdapter(pool_connections=5, pool_maxsize=5, max_retries=1)
+    session.mount("http://", adapter)
     
     while True:
         tick += 1
@@ -222,19 +227,20 @@ def main_loop():
                 "status": status
             })
             
-        # Post bulk telemetry frame
+        # Stream to TAP Ingestion Server (:8001) for fast SQL writes
         try:
-            r = requests.post(API_URL, json=payload, timeout=2.0)
-            if r.status_code in [200, 201]:
-                # Log success details periodically to avoid flooding logs
-                if tick % 5 == 0:
-                    print(f"[{timestamp}] Successfully posted {len(payload)} SCADA signals. API: {r.status_code}")
-            else:
-                print(f"[{timestamp}] Ingestion Error. API Status: {r.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"[{timestamp}] Backend unreachable at {API_URL}: {e}")
-            
-        time.sleep(1.0)
+            session.post(TAP_URL, json=payload, timeout=1.0)
+        except Exception:
+            pass
+
+        # Stream to Backend (:8000) for real-time WebSocket broadcast & live alarms
+        try:
+            r = session.post(BACKEND_FALLBACK_URL, json=payload, timeout=1.0)
+            if r.status_code in [200, 201] and tick % 5 == 0:
+                print(f"[{timestamp}] Streamed {len(payload)} SCADA signals to TAP (:8001) & Backend (:8000).")
+        except Exception as e:
+            if tick % 5 == 0:
+                print(f"[{timestamp}] Backend sync: {e}")
 
 if __name__ == "__main__":
     time.sleep(5.0)  # Wait for backend and database setup in Docker Compose

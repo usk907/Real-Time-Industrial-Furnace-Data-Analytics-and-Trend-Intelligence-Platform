@@ -17,6 +17,7 @@ export const Reports: React.FC = () => {
   const [reportType, setReportType] = useState<string>('DAILY');
   const [format, setFormat] = useState<string>('CSV');
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchReports();
@@ -39,6 +40,7 @@ export const Reports: React.FC = () => {
   const handleGenerate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    setError(null);
     try {
       const res = await fetch('/api/reports/generate', {
         method: 'POST',
@@ -53,23 +55,39 @@ export const Reports: React.FC = () => {
       });
       if (res.ok) {
         fetchReports();
+      } else {
+        const data = await res.json();
+        setError(data.detail || 'Failed to generate report.');
       }
     } catch (e) {
-      console.error(e);
+      setError('Failed to generate report.');
     }
     setLoading(false);
   };
 
-  const handleDownload = (r: ReportItem) => {
-    // Trigger file download in browser
-    // Since Nginx serves our files, reports folder will be accessible or we can build a download link
-    const link = document.createElement('a');
-    link.href = `/api/v1/reports/download?file=${r.name}`; // Mock API path or relative file
-    // Fallback: download as text block directly
-    link.download = r.name;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownload = async (r: ReportItem) => {
+    try {
+      const res = await fetch(`/api/reports/download?file=${encodeURIComponent(r.name)}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = r.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      } else {
+        console.error("Failed to download report file from server");
+      }
+    } catch (e) {
+      console.error("Error during report download:", e);
+    }
   };
 
   return (
@@ -106,9 +124,7 @@ export const Reports: React.FC = () => {
                 onChange={(e) => setFormat(e.target.value)}
                 className="w-full bg-[#0D1227] border border-[#1F2942]/60 rounded-xl p-3 text-slate-200 focus:outline-none"
               >
-                <option value="CSV">Microsoft Excel (CSV)</option>
-                <option value="EXCEL">Spreadsheet XML (.xlsx)</option>
-                <option value="PDF">Acrobat Ledger Document (PDF)</option>
+                <option value="CSV">CSV</option>
               </select>
             </div>
 
@@ -120,6 +136,12 @@ export const Reports: React.FC = () => {
               {loading ? "Compiling..." : "Generate Report File"}
             </button>
           </form>
+
+          {error && (
+            <div className="rounded-xl border border-red-900/30 bg-red-950/20 p-3 text-xs text-red-400">
+              {error}
+            </div>
+          )}
         </div>
 
         {/* Generated Reports List */}

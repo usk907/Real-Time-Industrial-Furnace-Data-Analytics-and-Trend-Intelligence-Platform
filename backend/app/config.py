@@ -1,5 +1,15 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+env_path = os.path.join(base_dir, '.env')
+if os.path.exists(env_path):
+    load_dotenv(dotenv_path=env_path)
+else:
+    load_dotenv()
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Industrial Energy Intelligence Platform (IEIP)"

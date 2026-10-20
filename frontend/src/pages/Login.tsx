@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Lock, User, AlertCircle } from 'lucide-react';
+import { Shield, Lock, User, AlertCircle, Mail, ArrowRight } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { login, authError } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showForgot, setShowForgot] = useState(false);
+  const [email, setEmail] = useState('');
+  const [forgotMessage, setForgotMessage] = useState<string | null>(null);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -14,6 +19,32 @@ export const Login: React.FC = () => {
     setLoading(true);
     await login(username, password);
     setLoading(false);
+  };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setForgotLoading(true);
+    setForgotError(null);
+    setForgotMessage(null);
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || 'Unable to request reset link');
+      }
+      setForgotMessage(data.reset_link_mock || data.message || 'Reset link generated.');
+    } catch (err: any) {
+      setForgotError(err.message || 'Unable to request password reset.');
+    } finally {
+      setForgotLoading(false);
+    }
   };
 
   return (
@@ -107,6 +138,52 @@ export const Login: React.FC = () => {
               {loading ? "Authenticating..." : "Sign In to Console"}
             </button>
           </form>
+
+          <button
+            type="button"
+            onClick={() => setShowForgot((prev) => !prev)}
+            className="mt-4 text-left text-[11px] font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300"
+          >
+            {showForgot ? 'Hide password recovery' : 'Forgot password?'}
+          </button>
+
+          {showForgot && (
+            <form onSubmit={handleForgotPassword} className="mt-4 space-y-3 rounded-2xl border border-[#1F2942]/50 bg-[#0D1227] p-4">
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                <Mail className="h-4 w-4 text-cyan-400" />
+                Request reset link
+              </div>
+              {forgotError && (
+                <div className="rounded-xl border border-red-900/30 bg-red-950/20 p-3 text-xs text-red-400">
+                  {forgotError}
+                </div>
+              )}
+              {forgotMessage && (
+                <div className="rounded-xl border border-emerald-900/30 bg-emerald-950/20 p-3 text-xs text-emerald-400 break-all">
+                  {forgotMessage}
+                </div>
+              )}
+              <div className="relative">
+                <Mail className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-500" />
+                <input
+                  type="email"
+                  required
+                  placeholder="Enter account email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-[#0A0E1C] border border-[#1F2942]/60 rounded-xl p-3.5 pl-11 text-slate-100 placeholder-slate-600 focus:border-cyan-400 focus:outline-none transition text-xs font-semibold"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={forgotLoading}
+                className="w-full bg-[#101730] hover:bg-[#142144] text-cyan-300 font-extrabold py-3 px-4 rounded-xl border border-[#24406d] text-[11px] uppercase tracking-wider transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+              >
+                {forgotLoading ? 'Generating...' : 'Send Recovery Link'}
+                <ArrowRight className="h-4 w-4" />
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

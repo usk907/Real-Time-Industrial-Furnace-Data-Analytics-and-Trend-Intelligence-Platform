@@ -187,7 +187,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <p className="text-[10px] uppercase text-[#556994] font-bold tracking-wider">Accum. Cost (Today)</p>
           <h3 className="text-2xl font-black mt-2 text-emerald-400">
-            ₨{Math.round(kpis.energy_cost).toLocaleString()}
+            ₹ {Math.round(kpis.energy_cost).toLocaleString()}
           </h3>
           <p className="text-[9px] text-slate-500 mt-2">Calculated rate: $0.12 / kWh</p>
         </div>

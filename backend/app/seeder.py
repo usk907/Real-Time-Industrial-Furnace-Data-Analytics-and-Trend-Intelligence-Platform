@@ -4,77 +4,67 @@ from backend.app.models import Role, User, Plant, Department, Machine, Device, S
 
 # Array of devices configuration matching init-db.sql
 DEVICES_CONFIG = [
-    # Grid & Distribution (1 - 16, machine_id = 1)
-    {"id": 1, "machine_id": 1, "name": "CB5214 kW", "type": "POWER", "register_address": "30001", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-CB5214"},
-    {"id": 2, "machine_id": 1, "name": "CB14 kW", "type": "POWER", "register_address": "30002", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-CB14"},
-    {"id": 3, "machine_id": 1, "name": "CB52G4 kW", "type": "POWER", "register_address": "30003", "unit": "kW", "min": 0.0, "max": 30000.0, "sn": "SN-CB52G4"},
-    {"id": 4, "machine_id": 1, "name": "CB52G14 kW", "type": "POWER", "register_address": "30004", "unit": "kW", "min": 0.0, "max": 30000.0, "sn": "SN-CB52G14"},
-    {"id": 5, "machine_id": 1, "name": "CB52G24 kW", "type": "POWER", "register_address": "30005", "unit": "kW", "min": 0.0, "max": 30000.0, "sn": "SN-CB52G24"},
-    {"id": 6, "machine_id": 1, "name": "SMS Allocated Power", "type": "POWER", "register_address": "30006", "unit": "kW", "min": 0.0, "max": 150000.0, "sn": "SN-SMS-AL"},
-    {"id": 7, "machine_id": 1, "name": "SMS Run. Power", "type": "POWER", "register_address": "30007", "unit": "kW", "min": 0.0, "max": 150000.0, "sn": "SN-SMS-RN"},
-    {"id": 8, "machine_id": 1, "name": "SMS-1 PR", "type": "SETPOINT", "register_address": "30008", "unit": "", "min": 0.0, "max": 5.0, "sn": "SN-SMS1PR"},
-    {"id": 9, "machine_id": 1, "name": "SMS-2 PR", "type": "SETPOINT", "register_address": "30009", "unit": "", "min": 0.0, "max": 5.0, "sn": "SN-SMS2PR"},
-    {"id": 10, "machine_id": 1, "name": "SMS-4 PR", "type": "SETPOINT", "register_address": "30010", "unit": "", "min": 0.0, "max": 5.0, "sn": "SN-SMS4PR"},
-    {"id": 11, "machine_id": 1, "name": "SMS-1 Max Set", "type": "SETPOINT", "register_address": "30011", "unit": "kW", "min": 0.0, "max": 100000.0, "sn": "SN-SMS1MAX"},
-    {"id": 12, "machine_id": 1, "name": "SMS-1 Min Set", "type": "SETPOINT", "register_address": "30012", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-SMS1MIN"},
-    {"id": 13, "machine_id": 1, "name": "SMS-2 Max Set", "type": "SETPOINT", "register_address": "30013", "unit": "kW", "min": 0.0, "max": 100000.0, "sn": "SN-SMS2MAX"},
-    {"id": 14, "machine_id": 1, "name": "SMS-2 Min Set", "type": "SETPOINT", "register_address": "30014", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-SMS2MIN"},
-    {"id": 15, "machine_id": 1, "name": "SMS-4 Max Set", "type": "SETPOINT", "register_address": "30015", "unit": "kW", "min": 0.0, "max": 100000.0, "sn": "SN-SMS4MAX"},
-    {"id": 16, "machine_id": 1, "name": "SMS-4 Min Set", "type": "SETPOINT", "register_address": "30016", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-SMS4MIN"},
+    # Grid & Distribution (1 - 4, machine_id = 1)
+    {"id": 1, "machine_id": 1, "name": "Grid Import kWh", "type": "ACCUMULATOR", "register_address": "30001", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR1"},
+    {"id": 2, "machine_id": 1, "name": "Grid Import kVah", "type": "ACCUMULATOR", "register_address": "30002", "unit": "kVah", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR1"},
+    {"id": 3, "machine_id": 1, "name": "Grid Export kWh", "type": "ACCUMULATOR", "register_address": "30003", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR2"},
+    {"id": 4, "machine_id": 1, "name": "Grid Export kVah", "type": "ACCUMULATOR", "register_address": "30004", "unit": "kVah", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR2"},
 
-    # SMS-1 Furnace Parameters (17 - 19, machine_id = 2)
-    {"id": 17, "machine_id": 2, "name": "SMS-1 Max Set", "type": "SETPOINT", "register_address": "31001", "unit": "kW", "min": 0.0, "max": 100000.0, "sn": "SN-SMS1F-MAX"},
-    {"id": 18, "machine_id": 2, "name": "SMS-1 Avl. Power", "type": "POWER", "register_address": "31002", "unit": "kW", "min": 0.0, "max": 100000.0, "sn": "SN-SMS1F-AVL"},
-    {"id": 19, "machine_id": 2, "name": "SMS-1 Run. Power", "type": "POWER", "register_address": "31003", "unit": "kW", "min": 0.0, "max": 100000.0, "sn": "SN-SMS1F-RUN"},
+    # Turbine Generators (5 - 9, machine_id = 5)
+    {"id": 5, "machine_id": 5, "name": "30MW TG-1 kWh", "type": "ACCUMULATOR", "register_address": "30005", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-TG1"},
+    {"id": 6, "machine_id": 5, "name": "30MW TG-2 kWh", "type": "ACCUMULATOR", "register_address": "30006", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-TG2"},
+    {"id": 7, "machine_id": 5, "name": "33MW TG-3 kWh", "type": "ACCUMULATOR", "register_address": "30007", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-TG3"},
+    {"id": 8, "machine_id": 5, "name": "30MW TG-4 kWh", "type": "ACCUMULATOR", "register_address": "30008", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-TG4"},
+    {"id": 9, "machine_id": 5, "name": "40MW TG-5 kWh", "type": "ACCUMULATOR", "register_address": "30009", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-TG5"},
 
-    # SMS-4 Furnace Details (20 - 39, machine_id = 4)
-    {"id": 20, "machine_id": 4, "name": "SMS-4 Max Set", "type": "SETPOINT", "register_address": "32001", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-SMS4-MAX"},
-    {"id": 21, "machine_id": 4, "name": "SMS-4 Avl. Power", "type": "POWER", "register_address": "32002", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-SMS4-AVL"},
-    {"id": 22, "machine_id": 4, "name": "SMS-4 Run. Power", "type": "POWER", "register_address": "32003", "unit": "kW", "min": 0.0, "max": 50000.0, "sn": "SN-SMS4-RUN"},
-    {"id": 23, "machine_id": 4, "name": "SMS-4 Utl. Factor(%)", "type": "KPI", "register_address": "32004", "unit": "%", "min": 0.0, "max": 100.0, "sn": "SN-SMS4-UTL"},
-    {"id": 24, "machine_id": 4, "name": "SMS-4 Fur-1 SP", "type": "SETPOINT", "register_address": "32005", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F1SP"},
-    {"id": 25, "machine_id": 4, "name": "SMS-4 Fur-1 kW", "type": "POWER", "register_address": "32006", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F1KW"},
-    {"id": 26, "machine_id": 4, "name": "SMS-4 Fur-1 PP%", "type": "POWER", "register_address": "32007", "unit": "%", "min": 0.0, "max": 100.0, "sn": "SN-SMS4-F1PP"},
-    {"id": 27, "machine_id": 4, "name": "SMS-4 Fur-1 PR", "type": "SETPOINT", "register_address": "32008", "unit": "", "min": 1.0, "max": 4.0, "sn": "SN-SMS4-F1PR"},
-    {"id": 28, "machine_id": 4, "name": "SMS-4 Fur-2 SP", "type": "SETPOINT", "register_address": "32009", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F2SP"},
-    {"id": 29, "machine_id": 4, "name": "SMS-4 Fur-2 kW", "type": "POWER", "register_address": "32010", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F2KW"},
-    {"id": 30, "machine_id": 4, "name": "SMS-4 Fur-2 PP%", "type": "POWER", "register_address": "32011", "unit": "%", "min": 0.0, "max": 100.0, "sn": "SN-SMS4-F2PP"},
-    {"id": 31, "machine_id": 4, "name": "SMS-4 Fur-2 PR", "type": "SETPOINT", "register_address": "32012", "unit": "", "min": 1.0, "max": 4.0, "sn": "SN-SMS4-F2PR"},
-    {"id": 32, "machine_id": 4, "name": "SMS-4 Fur-3 SP", "type": "SETPOINT", "register_address": "32013", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F3SP"},
-    {"id": 33, "machine_id": 4, "name": "SMS-4 Fur-3 kW", "type": "POWER", "register_address": "32014", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F3KW"},
-    {"id": 34, "machine_id": 4, "name": "SMS-4 Fur-3 PP%", "type": "POWER", "register_address": "32015", "unit": "%", "min": 0.0, "max": 100.0, "sn": "SN-SMS4-F3PP"},
-    {"id": 35, "machine_id": 4, "name": "SMS-4 Fur-3 PR", "type": "SETPOINT", "register_address": "32016", "unit": "", "min": 1.0, "max": 4.0, "sn": "SN-SMS4-F3PR"},
-    {"id": 36, "machine_id": 4, "name": "SMS-4 Fur-4 SP", "type": "SETPOINT", "register_address": "32017", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F4SP"},
-    {"id": 37, "machine_id": 4, "name": "SMS-4 Fur-4 kW", "type": "POWER", "register_address": "32018", "unit": "kW", "min": 0.0, "max": 10000.0, "sn": "SN-SMS4-F4KW"},
-    {"id": 38, "machine_id": 4, "name": "SMS-4 Fur-4 PP%", "type": "POWER", "register_address": "32019", "unit": "%", "min": 0.0, "max": 100.0, "sn": "SN-SMS4-F4PP"},
-    {"id": 39, "machine_id": 4, "name": "SMS-4 Fur-4 PR", "type": "SETPOINT", "register_address": "32020", "unit": "", "min": 1.0, "max": 4.0, "sn": "SN-SMS4-F4PR"},
+    # SMS-1 Furnace Parameters (10 - 17, machine_id = 2)
+    {"id": 10, "machine_id": 2, "name": "SMS-1 Fur-1 kWh", "type": "ACCUMULATOR", "register_address": "30010", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-F1"},
+    {"id": 11, "machine_id": 2, "name": "SMS-1 Fur-2 kWh", "type": "ACCUMULATOR", "register_address": "30011", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-F2"},
+    {"id": 12, "machine_id": 2, "name": "SMS-1 Fur-3 kWh", "type": "ACCUMULATOR", "register_address": "30012", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-F3"},
+    {"id": 13, "machine_id": 2, "name": "SMS-1 Fur-4 kWh", "type": "ACCUMULATOR", "register_address": "30013", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-F4"},
+    {"id": 14, "machine_id": 2, "name": "SMS-1 Fur-5 kWh", "type": "ACCUMULATOR", "register_address": "30014", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-F5"},
+    {"id": 15, "machine_id": 2, "name": "SMS-1 Aux-1 kWh", "type": "ACCUMULATOR", "register_address": "30015", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-A1"},
+    {"id": 16, "machine_id": 2, "name": "SMS-1 Aux-2 kWh", "type": "ACCUMULATOR", "register_address": "30016", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-A2"},
+    {"id": 17, "machine_id": 2, "name": "SMS-1 Sint kWh", "type": "ACCUMULATOR", "register_address": "30017", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS1-SINT"},
 
-    # Turbine Generators (40 - 44, machine_id = 5)
-    {"id": 40, "machine_id": 5, "name": "30MW TG-1 kW", "type": "POWER", "register_address": "33001", "unit": "kW", "min": 0.0, "max": 30000.0, "sn": "SN-TG1"},
-    {"id": 41, "machine_id": 5, "name": "30MW TG-2 kW", "type": "POWER", "register_address": "33002", "unit": "kW", "min": 0.0, "max": 30000.0, "sn": "SN-TG2"},
-    {"id": 42, "machine_id": 5, "name": "33MW TG-3 kW", "type": "POWER", "register_address": "33003", "unit": "kW", "min": 0.0, "max": 33000.0, "sn": "SN-TG3"},
-    {"id": 43, "machine_id": 5, "name": "30MW TG-4 kW", "type": "POWER", "register_address": "33004", "unit": "kW", "min": 0.0, "max": 30000.0, "sn": "SN-TG4"},
-    {"id": 44, "machine_id": 5, "name": "40MW TG-5 kW", "type": "POWER", "register_address": "33005", "unit": "kW", "min": 0.0, "max": 40000.0, "sn": "SN-TG5"},
+    # SAF Shop Parameters (18 - 20, machine_id = 6)
+    {"id": 18, "machine_id": 6, "name": "SAF-1(2x9Mva) kWh", "type": "ACCUMULATOR", "register_address": "30018", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SAF1"},
+    {"id": 19, "machine_id": 6, "name": "SAF-2(2x9Mva) kWh", "type": "ACCUMULATOR", "register_address": "30019", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SAF2"},
+    {"id": 20, "machine_id": 6, "name": "SAF-3(2x4.5Mva) kWh", "type": "ACCUMULATOR", "register_address": "30020", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SAF3"},
 
-    # Consumption Accumulations (45 - 50, machine_id = 1)
-    {"id": 45, "machine_id": 1, "name": "Grid Import kWh", "type": "ACCUMULATOR", "register_address": "34001", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR1"},
-    {"id": 46, "machine_id": 1, "name": "Grid Import kVah", "type": "ACCUMULATOR", "register_address": "34002", "unit": "kVah", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR1"},
-    {"id": 47, "machine_id": 1, "name": "Avg. P.F.", "type": "KPI", "register_address": "34003", "unit": "", "min": 0.0, "max": 1.0, "sn": "SN-MTR1"},
-    {"id": 48, "machine_id": 1, "name": "Load Factor", "type": "KPI", "register_address": "34004", "unit": "", "min": 0.0, "max": 100.0, "sn": "SN-MTR1"},
-    {"id": 49, "machine_id": 1, "name": "Grid Export kWh", "type": "ACCUMULATOR", "register_address": "34005", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR2"},
-    {"id": 50, "machine_id": 1, "name": "Grid Export kVah", "type": "ACCUMULATOR", "register_address": "34006", "unit": "kVah", "min": 0.0, "max": 10000000.0, "sn": "SN-MTR2"},
+    # Rolling Mills Parameters (21 - 23, machine_id = 7)
+    {"id": 21, "machine_id": 7, "name": "RMD kWh", "type": "ACCUMULATOR", "register_address": "30021", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-RMD"},
+    {"id": 22, "machine_id": 7, "name": "SRM kWh", "type": "ACCUMULATOR", "register_address": "30022", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SRM"},
+    {"id": 23, "machine_id": 7, "name": "WRM kWh", "type": "ACCUMULATOR", "register_address": "30023", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-WRM"},
 
-    # Physical Analytics Sensors (51 - 60)
-    {"id": 51, "machine_id": 2, "name": "SMS-1 Furnace Temp", "type": "TEMPERATURE", "register_address": "35001", "unit": "°C", "min": 0.0, "max": 2000.0, "sn": "SN-SMS1-TEMP"},
-    {"id": 52, "machine_id": 2, "name": "SMS-1 Furnace Pressure", "type": "PRESSURE", "register_address": "35002", "unit": "bar", "min": 0.0, "max": 5.0, "sn": "SN-SMS1-PRES"},
-    {"id": 53, "machine_id": 2, "name": "SMS-1 Cooling Water Flow", "type": "FLOW", "register_address": "35003", "unit": "m³/h", "min": 0.0, "max": 500.0, "sn": "SN-SMS1-FLOW"},
-    {"id": 54, "machine_id": 5, "name": "TG-2 Turbine RPM", "type": "SPEED", "register_address": "35004", "unit": "RPM", "min": 0.0, "max": 5000.0, "sn": "SN-TG2-RPM"},
-    {"id": 55, "machine_id": 1, "name": "CB5214 Voltage", "type": "VOLTAGE", "register_address": "35005", "unit": "V", "min": 0.0, "max": 15000.0, "sn": "SN-CB5214-V"},
-    {"id": 56, "machine_id": 1, "name": "CB5214 Current", "type": "CURRENT", "register_address": "35006", "unit": "A", "min": 0.0, "max": 1000.0, "sn": "SN-CB5214-A"},
-    {"id": 57, "machine_id": 2, "name": "SMS Ambient Humidity", "type": "HUMIDITY", "register_address": "35007", "unit": "%", "min": 0.0, "max": 100.0, "sn": "SN-SMS-HUM"},
-    {"id": 58, "machine_id": 2, "name": "SMS Carbon Dioxide (CO2)", "type": "GAS", "register_address": "35008", "unit": "ppm", "min": 0.0, "max": 2000.0, "sn": "SN-SMS-CO2"},
-    {"id": 59, "machine_id": 2, "name": "SMS-1 Production Count", "type": "COUNT", "register_address": "35009", "unit": "heats", "min": 0.0, "max": 1000.0, "sn": "SN-SMS1-PROD"},
-    {"id": 60, "machine_id": 4, "name": "SMS-4 Gas Level (CO)", "type": "GAS", "register_address": "35010", "unit": "ppm", "min": 0.0, "max": 100.0, "sn": "SN-SMS4-CO"}
+    # SMS-2 Furnace Parameters (24 - 35, 40 - 41, machine_id = 3)
+    {"id": 24, "machine_id": 3, "name": "SMS-2 Fur-1 kWh", "type": "ACCUMULATOR", "register_address": "30024", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F1"},
+    {"id": 25, "machine_id": 3, "name": "SMS-2 Fur-2 kWh", "type": "ACCUMULATOR", "register_address": "30025", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F2"},
+    {"id": 26, "machine_id": 3, "name": "SMS-2 Fur-3 kWh", "type": "ACCUMULATOR", "register_address": "30026", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F3"},
+    {"id": 27, "machine_id": 3, "name": "SMS-2 Fur-4 kWh", "type": "ACCUMULATOR", "register_address": "30027", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F4"},
+    {"id": 28, "machine_id": 3, "name": "SMS-2 Fur-5 kWh", "type": "ACCUMULATOR", "register_address": "30028", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F5"},
+    {"id": 29, "machine_id": 3, "name": "SMS-2 Fur-6 kWh", "type": "ACCUMULATOR", "register_address": "30029", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F6"},
+    {"id": 30, "machine_id": 3, "name": "SMS-2 Fur-7 kWh", "type": "ACCUMULATOR", "register_address": "30030", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F7"},
+    {"id": 31, "machine_id": 3, "name": "SMS-2 Fur-8 kWh", "type": "ACCUMULATOR", "register_address": "30031", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F8"},
+    {"id": 32, "machine_id": 3, "name": "SMS-2 Fur-9 kWh", "type": "ACCUMULATOR", "register_address": "30032", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F9"},
+    {"id": 33, "machine_id": 3, "name": "SMS-2 Fur-10 kWh", "type": "ACCUMULATOR", "register_address": "30033", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F10"},
+    {"id": 34, "machine_id": 3, "name": "SMS-2 Fur-11 kWh", "type": "ACCUMULATOR", "register_address": "30034", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F11"},
+    {"id": 35, "machine_id": 3, "name": "SMS-2 Fur-12 kWh", "type": "ACCUMULATOR", "register_address": "30035", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-F12"},
+    {"id": 40, "machine_id": 3, "name": "SMS-2 Aux-1 kWh", "type": "ACCUMULATOR", "register_address": "30040", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-A1"},
+    {"id": 41, "machine_id": 3, "name": "SMS-2 Aux-2 kWh", "type": "ACCUMULATOR", "register_address": "30041", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS2-A2"},
+
+    # SMS-4 Furnace Details (36 - 39, 42 - 48, machine_id = 4)
+    {"id": 36, "machine_id": 4, "name": "SMS-4 Fur-1 kWh", "type": "ACCUMULATOR", "register_address": "30036", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-F1"},
+    {"id": 37, "machine_id": 4, "name": "SMS-4 Fur-2 kWh", "type": "ACCUMULATOR", "register_address": "30037", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-F2"},
+    {"id": 38, "machine_id": 4, "name": "SMS-4 Fur-3 kWh", "type": "ACCUMULATOR", "register_address": "30038", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-F3"},
+    {"id": 39, "machine_id": 4, "name": "SMS-4 Fur-4 kWh", "type": "ACCUMULATOR", "register_address": "30039", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-F4"},
+    {"id": 42, "machine_id": 4, "name": "SMS-4 Sint-1 kWh", "type": "ACCUMULATOR", "register_address": "30042", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-SINT1"},
+    {"id": 43, "machine_id": 4, "name": "SMS-4 Sint-2 kWh", "type": "ACCUMULATOR", "register_address": "30043", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-SINT2"},
+    {"id": 44, "machine_id": 4, "name": "SMS-4 Aux kWh", "type": "ACCUMULATOR", "register_address": "30044", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-AUX"},
+    {"id": 45, "machine_id": 4, "name": "SMS-4 TR2MVA kWh", "type": "ACCUMULATOR", "register_address": "30045", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-TR2"},
+    {"id": 46, "machine_id": 4, "name": "SMS-4 TR6MVA kWh", "type": "ACCUMULATOR", "register_address": "30046", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-TR6"},
+    {"id": 47, "machine_id": 4, "name": "SMS-4 TR3.6MVA kWh", "type": "ACCUMULATOR", "register_address": "30047", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-TR36"},
+    {"id": 48, "machine_id": 4, "name": "SMS-4 TR5MVA kWh", "type": "ACCUMULATOR", "register_address": "30048", "unit": "kWh", "min": 0.0, "max": 10000000.0, "sn": "SN-SMS4-TR5"}
 ]
 
 def init_and_seed_db(db: Session):
@@ -103,7 +93,7 @@ def init_and_seed_db(db: Session):
     admin = User(
         username="admin",
         email="admin@ieip-platform.com",
-        password_hash="$2b$12$R.S2uUuWf9Uq0L8M2c2j5uUoA8bS3q1WlQpUaOqF.4n5D5U5m2k5e",
+        password_hash="$2b$12$g7G0jnTp45zk0JcN1uCMjO34TnMmj//Wu2NjNCva2Z76HqumX3t7.",
         role_id=1,
         is_active=True
     )
@@ -123,14 +113,16 @@ def init_and_seed_db(db: Session):
     db.commit()
     
     # Seed Plant
-    plant = Plant(id=1, name="Gary Steel Works", location="Gary, Indiana", timezone="EST", description="Primary integrated steel production mill", status="ACTIVE")
+    plant = Plant(id=1, name="Shyam Metaliks & Energy Ltd.", location="West Bengal, India", timezone="IST", description="Integrated steel and ferro alloys plant", status="ACTIVE")
     db.add(plant)
     db.commit()
     
     # Seed Departments
     departments = [
         Department(id=1, plant_id=1, name="Power Distribution", description="Substations and distribution parameters"),
-        Department(id=2, plant_id=1, name="Steel Melting Shop (SMS)", description="Electric Arc Furnace shops")
+        Department(id=2, plant_id=1, name="Steel Melting Shop (SMS)", description="Electric Arc Furnace shops"),
+        Department(id=3, plant_id=1, name="Ferro Alloys (SAF)", description="Submerged Arc Furnace shops"),
+        Department(id=4, plant_id=1, name="Rolling Mills", description="Rolling Mill mills")
     ]
     for d in departments:
         db.add(d)
@@ -142,7 +134,9 @@ def init_and_seed_db(db: Session):
         Machine(id=2, department_id=2, name="SMS-1", type="SMS_SHOP", rated_capacity=70000.0, status="RUNNING"),
         Machine(id=3, department_id=2, name="SMS-2", type="SMS_SHOP", rated_capacity=70000.0, status="STOPPED"),
         Machine(id=4, department_id=2, name="SMS-4", type="SMS_SHOP", rated_capacity=30000.0, status="RUNNING"),
-        Machine(id=5, department_id=1, name="Turbines", type="TURBINES", rated_capacity=63000.0, status="RUNNING")
+        Machine(id=5, department_id=1, name="Turbines", type="TURBINES", rated_capacity=63000.0, status="RUNNING"),
+        Machine(id=6, department_id=3, name="SAF-Shop", type="FERRO_ALLOYS", rated_capacity=18000.0, status="RUNNING"),
+        Machine(id=7, department_id=4, name="Rolling-Mills", type="ROLLING_MILLS", rated_capacity=20000.0, status="RUNNING")
     ]
     for m in machines:
         db.add(m)

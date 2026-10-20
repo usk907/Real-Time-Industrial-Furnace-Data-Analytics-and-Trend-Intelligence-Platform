@@ -165,13 +165,15 @@ ON CONFLICT (key) DO NOTHING;
 
 -- Seed Plant
 INSERT INTO plants (id, name, location, timezone, description, status) VALUES
-(1, 'Gary Steel Works', 'Gary, Indiana', 'EST', 'Primary integrated steel production mill', 'ACTIVE')
+(1, 'Shyam Metaliks & Energy Ltd.', 'West Bengal, India', 'IST', 'Integrated steel and ferro alloys plant', 'ACTIVE')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Departments
 INSERT INTO departments (id, plant_id, name, description) VALUES
 (1, 1, 'Power Distribution', 'Substations and distribution grids'),
-(2, 1, 'Steel Melting Shop (SMS)', 'Electric Arc Furnace shops')
+(2, 1, 'Steel Melting Shop (SMS)', 'Electric Arc Furnace shops'),
+(3, 1, 'Ferro Alloys (SAF)', 'Submerged Arc Furnace shops'),
+(4, 1, 'Rolling Mills', 'Rolling Mill mills')
 ON CONFLICT (id) DO NOTHING;
 
 -- Seed Machines
@@ -180,75 +182,59 @@ INSERT INTO machines (id, department_id, name, type, rated_capacity, status) VAL
 (2, 2, 'SMS-1', 'SMS_SHOP', 70000.0, 'RUNNING'),
 (3, 2, 'SMS-2', 'SMS_SHOP', 70000.0, 'STOPPED'),
 (4, 2, 'SMS-4', 'SMS_SHOP', 30000.0, 'RUNNING'),
-(5, 1, 'Turbines', 'TURBINES', 63000.0, 'RUNNING')
+(5, 1, 'Turbines', 'TURBINES', 63000.0, 'RUNNING'),
+(6, 3, 'SAF-Shop', 'FERRO_ALLOYS', 18000.0, 'RUNNING'),
+(7, 4, 'Rolling-Mills', 'ROLLING_MILLS', 20000.0, 'RUNNING')
 ON CONFLICT (id) DO NOTHING;
 
--- Seed Devices (Grid & Distribution, machine_id = 1)
+-- Seed Devices (Shyam Metaliks tags 1-48)
 INSERT INTO devices (id, machine_id, name, type, register_address, unit, nominal_min, nominal_max, serial_number, firmware_version, communication_status, installation_date) VALUES
-(1, 1, 'CB5214 kW', 'POWER', '30001', 'kW', 0.0, 50000.0, 'SN-CB5214', 'v1.4.2', 'ONLINE', '2024-01-15'),
-(2, 1, 'CB14 kW', 'POWER', '30002', 'kW', 0.0, 50000.0, 'SN-CB14', 'v1.4.2', 'ONLINE', '2024-01-15'),
-(3, 1, 'CB52G4 kW', 'POWER', '30003', 'kW', 0.0, 30000.0, 'SN-CB52G4', 'v1.3.1', 'ONLINE', '2024-02-10'),
-(4, 1, 'CB52G14 kW', 'POWER', '30004', 'kW', 0.0, 30000.0, 'SN-CB52G14', 'v1.3.1', 'ONLINE', '2024-02-10'),
-(5, 1, 'CB52G24 kW', 'POWER', '30005', 'kW', 0.0, 30000.0, 'SN-CB52G24', 'v1.3.1', 'ONLINE', '2024-02-10'),
-(6, 1, 'SMS Allocated Power', 'POWER', '30006', 'kW', 0.0, 150000.0, 'SN-SMS-AL', 'v2.0.1', 'ONLINE', '2023-11-05'),
-(7, 1, 'SMS Run. Power', 'POWER', '30007', 'kW', 0.0, 150000.0, 'SN-SMS-RN', 'v2.0.1', 'ONLINE', '2023-11-05'),
-(8, 1, 'SMS-1 PR', 'SETPOINT', '30008', '', 0.0, 5.0, 'SN-SMS1PR', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(9, 1, 'SMS-2 PR', 'SETPOINT', '30009', '', 0.0, 5.0, 'SN-SMS2PR', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(10, 1, 'SMS-4 PR', 'SETPOINT', '30010', '', 0.0, 5.0, 'SN-SMS4PR', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(11, 1, 'SMS-1 Max Set', 'SETPOINT', '30011', 'kW', 0.0, 100000.0, 'SN-SMS1MAX', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(12, 1, 'SMS-1 Min Set', 'SETPOINT', '30012', 'kW', 0.0, 50000.0, 'SN-SMS1MIN', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(13, 1, 'SMS-2 Max Set', 'SETPOINT', '30013', 'kW', 0.0, 100000.0, 'SN-SMS2MAX', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(14, 1, 'SMS-2 Min Set', 'SETPOINT', '30014', 'kW', 0.0, 50000.0, 'SN-SMS2MIN', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(15, 1, 'SMS-4 Max Set', 'SETPOINT', '30015', 'kW', 0.0, 100000.0, 'SN-SMS4MAX', 'v1.0.0', 'ONLINE', '2024-03-01'),
-(16, 1, 'SMS-4 Min Set', 'SETPOINT', '30016', 'kW', 0.0, 50000.0, 'SN-SMS4MIN', 'v1.0.0', 'ONLINE', '2024-03-01')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Devices (SMS-1 Furnace, machine_id = 2)
-INSERT INTO devices (id, machine_id, name, type, register_address, unit, nominal_min, nominal_max, serial_number, firmware_version, communication_status, installation_date) VALUES
-(17, 2, 'SMS-1 Max Set', 'SETPOINT', '31001', 'kW', 0.0, 100000.0, 'SN-SMS1F-MAX', 'v1.1.0', 'ONLINE', '2024-03-01'),
-(18, 2, 'SMS-1 Avl. Power', 'POWER', '31002', 'kW', 0.0, 100000.0, 'SN-SMS1F-AVL', 'v1.1.0', 'ONLINE', '2024-03-01'),
-(19, 2, 'SMS-1 Run. Power', 'POWER', '31003', 'kW', 0.0, 100000.0, 'SN-SMS1F-RUN', 'v1.1.0', 'ONLINE', '2024-03-01')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Devices (SMS-4 Furnace, machine_id = 4)
-INSERT INTO devices (id, machine_id, name, type, register_address, unit, nominal_min, nominal_max, serial_number, firmware_version, communication_status, installation_date) VALUES
-(20, 4, 'SMS-4 Max Set', 'SETPOINT', '32001', 'kW', 0.0, 50000.0, 'SN-SMS4-MAX', 'v1.2.0', 'ONLINE', '2024-04-12'),
-(21, 4, 'SMS-4 Avl. Power', 'POWER', '32002', 'kW', 0.0, 50000.0, 'SN-SMS4-AVL', 'v1.2.0', 'ONLINE', '2024-04-12'),
-(22, 4, 'SMS-4 Run. Power', 'POWER', '32003', 'kW', 0.0, 50000.0, 'SN-SMS4-RUN', 'v1.2.0', 'ONLINE', '2024-04-12'),
-(23, 4, 'SMS-4 Utl. Factor(%)', 'KPI', '32004', '%', 0.0, 100.0, 'SN-SMS4-UTL', 'v1.2.0', 'ONLINE', '2024-04-12'),
-(24, 4, 'SMS-4 Fur-1 SP', 'SETPOINT', '32005', 'kW', 0.0, 10000.0, 'SN-SMS4-F1SP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(25, 4, 'SMS-4 Fur-1 kW', 'POWER', '32006', 'kW', 0.0, 10000.0, 'SN-SMS4-F1KW', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(26, 4, 'SMS-4 Fur-1 PP%', 'POWER', '32007', '%', 0.0, 100.0, 'SN-SMS4-F1PP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(27, 4, 'SMS-4 Fur-1 PR', 'SETPOINT', '32008', '', 1.0, 4.0, 'SN-SMS4-F1PR', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(28, 4, 'SMS-4 Fur-2 SP', 'SETPOINT', '32009', 'kW', 0.0, 10000.0, 'SN-SMS4-F2SP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(29, 4, 'SMS-4 Fur-2 kW', 'POWER', '32010', 'kW', 0.0, 10000.0, 'SN-SMS4-F2KW', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(30, 4, 'SMS-4 Fur-2 PP%', 'POWER', '32011', '%', 0.0, 100.0, 'SN-SMS4-F2PP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(31, 4, 'SMS-4 Fur-2 PR', 'SETPOINT', '32012', '', 1.0, 4.0, 'SN-SMS4-F2PR', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(32, 4, 'SMS-4 Fur-3 SP', 'SETPOINT', '32013', 'kW', 0.0, 10000.0, 'SN-SMS4-F3SP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(33, 4, 'SMS-4 Fur-3 kW', 'POWER', '32014', 'kW', 0.0, 10000.0, 'SN-SMS4-F3KW', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(34, 4, 'SMS-4 Fur-3 PP%', 'POWER', '32015', '%', 0.0, 100.0, 'SN-SMS4-F3PP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(35, 4, 'SMS-4 Fur-3 PR', 'SETPOINT', '32016', '', 1.0, 4.0, 'SN-SMS4-F3PR', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(36, 4, 'SMS-4 Fur-4 SP', 'SETPOINT', '32017', 'kW', 0.0, 10000.0, 'SN-SMS4-F4SP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(37, 4, 'SMS-4 Fur-4 kW', 'POWER', '32018', 'kW', 0.0, 10000.0, 'SN-SMS4-F4KW', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(38, 4, 'SMS-4 Fur-4 PP%', 'POWER', '32019', '%', 0.0, 100.0, 'SN-SMS4-F4PP', 'v2.1.2', 'ONLINE', '2024-04-15'),
-(39, 4, 'SMS-4 Fur-4 PR', 'SETPOINT', '32020', '', 1.0, 4.0, 'SN-SMS4-F4PR', 'v2.1.2', 'ONLINE', '2024-04-15')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Devices (Turbines, machine_id = 5)
-INSERT INTO devices (id, machine_id, name, type, register_address, unit, nominal_min, nominal_max, serial_number, firmware_version, communication_status, installation_date) VALUES
-(40, 5, '30MW TG-1 kW', 'POWER', '33001', 'kW', 0.0, 30000.0, 'SN-TG1', 'v3.2.0', 'ONLINE', '2022-06-18'),
-(41, 5, '30MW TG-2 kW', 'POWER', '33002', 'kW', 0.0, 30000.0, 'SN-TG2', 'v3.2.0', 'ONLINE', '2022-06-18'),
-(42, 5, '33MW TG-3 kW', 'POWER', '33003', 'kW', 0.0, 33000.0, 'SN-TG3', 'v3.2.5', 'ONLINE', '2022-08-22'),
-(43, 5, '30MW TG-4 kW', 'POWER', '33004', 'kW', 0.0, 30000.0, 'SN-TG4', 'v3.2.0', 'ONLINE', '2022-06-18'),
-(44, 5, '40MW TG-5 kW', 'POWER', '33005', 'kW', 0.0, 40000.0, 'SN-TG5', 'v3.5.0', 'ONLINE', '2023-05-12')
-ON CONFLICT (id) DO NOTHING;
-
--- Seed Devices (Accumulators & KPIs, machine_id = 1)
-INSERT INTO devices (id, machine_id, name, type, register_address, unit, nominal_min, nominal_max, serial_number, firmware_version, communication_status, installation_date) VALUES
-(45, 1, 'Grid Import kWh', 'ACCUMULATOR', '34001', 'kWh', 0.0, 10000000.0, 'SN-MTR1', 'v2.1.0', 'ONLINE', '2024-01-15'),
-(46, 1, 'Grid Import kVah', 'ACCUMULATOR', '34002', 'kVah', 0.0, 10000000.0, 'SN-MTR1', 'v2.1.0', 'ONLINE', '2024-01-15'),
-(47, 1, 'Avg. P.F.', 'KPI', '34003', '', 0.0, 1.0, 'SN-MTR1', 'v2.1.0', 'ONLINE', '2024-01-15'),
-(48, 1, 'Load Factor', 'KPI', '34004', '', 0.0, 100.0, 'SN-MTR1', 'v2.1.0', 'ONLINE', '2024-01-15'),
-(49, 1, 'Grid Export kWh', 'ACCUMULATOR', '34005', 'kWh', 0.0, 10000000.0, 'SN-MTR2', 'v2.1.0', 'ONLINE', '2024-01-15'),
-(50, 1, 'Grid Export kVah', 'ACCUMULATOR', '34006', 'kVah', 0.0, 10000000.0, 'SN-MTR2', 'v2.1.0', 'ONLINE', '2024-01-15')
+(1, 1, 'Grid Import kWh', 'ACCUMULATOR', '30001', 'kWh', 0.0, 10000000.0, 'SN-MTR1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(2, 1, 'Grid Import kVah', 'ACCUMULATOR', '30002', 'kVah', 0.0, 10000000.0, 'SN-MTR1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(3, 1, 'Grid Export kWh', 'ACCUMULATOR', '30003', 'kWh', 0.0, 10000000.0, 'SN-MTR2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(4, 1, 'Grid Export kVah', 'ACCUMULATOR', '30004', 'kVah', 0.0, 10000000.0, 'SN-MTR2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(5, 5, '30MW TG-1 kWh', 'ACCUMULATOR', '30005', 'kWh', 0.0, 10000000.0, 'SN-TG1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(6, 5, '30MW TG-2 kWh', 'ACCUMULATOR', '30006', 'kWh', 0.0, 10000000.0, 'SN-TG2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(7, 5, '33MW TG-3 kWh', 'ACCUMULATOR', '30007', 'kWh', 0.0, 10000000.0, 'SN-TG3', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(8, 5, '30MW TG-4 kWh', 'ACCUMULATOR', '30008', 'kWh', 0.0, 10000000.0, 'SN-TG4', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(9, 5, '40MW TG-5 kWh', 'ACCUMULATOR', '30009', 'kWh', 0.0, 10000000.0, 'SN-TG5', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(10, 2, 'SMS-1 Fur-1 kWh', 'ACCUMULATOR', '30010', 'kWh', 0.0, 10000000.0, 'SN-SMS1-F1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(11, 2, 'SMS-1 Fur-2 kWh', 'ACCUMULATOR', '30011', 'kWh', 0.0, 10000000.0, 'SN-SMS1-F2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(12, 2, 'SMS-1 Fur-3 kWh', 'ACCUMULATOR', '30012', 'kWh', 0.0, 10000000.0, 'SN-SMS1-F3', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(13, 2, 'SMS-1 Fur-4 kWh', 'ACCUMULATOR', '30013', 'kWh', 0.0, 10000000.0, 'SN-SMS1-F4', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(14, 2, 'SMS-1 Fur-5 kWh', 'ACCUMULATOR', '30014', 'kWh', 0.0, 10000000.0, 'SN-SMS1-F5', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(15, 2, 'SMS-1 Aux-1 kWh', 'ACCUMULATOR', '30015', 'kWh', 0.0, 10000000.0, 'SN-SMS1-A1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(16, 2, 'SMS-1 Aux-2 kWh', 'ACCUMULATOR', '30016', 'kWh', 0.0, 10000000.0, 'SN-SMS1-A2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(17, 2, 'SMS-1 Sint kWh', 'ACCUMULATOR', '30017', 'kWh', 0.0, 10000000.0, 'SN-SMS1-SINT', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(18, 6, 'SAF-1(2x9Mva) kWh', 'ACCUMULATOR', '30018', 'kWh', 0.0, 10000000.0, 'SN-SAF1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(19, 6, 'SAF-2(2x9Mva) kWh', 'ACCUMULATOR', '30019', 'kWh', 0.0, 10000000.0, 'SN-SAF2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(20, 6, 'SAF-3(2x4.5Mva) kWh', 'ACCUMULATOR', '30020', 'kWh', 0.0, 10000000.0, 'SN-SAF3', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(21, 7, 'RMD kWh', 'ACCUMULATOR', '30021', 'kWh', 0.0, 10000000.0, 'SN-RMD', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(22, 7, 'SRM kWh', 'ACCUMULATOR', '30022', 'kWh', 0.0, 10000000.0, 'SN-SRM', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(23, 7, 'WRM kWh', 'ACCUMULATOR', '30023', 'kWh', 0.0, 10000000.0, 'SN-WRM', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(24, 3, 'SMS-2 Fur-1 kWh', 'ACCUMULATOR', '30024', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(25, 3, 'SMS-2 Fur-2 kWh', 'ACCUMULATOR', '30025', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(26, 3, 'SMS-2 Fur-3 kWh', 'ACCUMULATOR', '30026', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F3', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(27, 3, 'SMS-2 Fur-4 kWh', 'ACCUMULATOR', '30027', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F4', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(28, 3, 'SMS-2 Fur-5 kWh', 'ACCUMULATOR', '30028', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F5', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(29, 3, 'SMS-2 Fur-6 kWh', 'ACCUMULATOR', '30029', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F6', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(30, 3, 'SMS-2 Fur-7 kWh', 'ACCUMULATOR', '30030', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F7', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(31, 3, 'SMS-2 Fur-8 kWh', 'ACCUMULATOR', '30031', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F8', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(32, 3, 'SMS-2 Fur-9 kWh', 'ACCUMULATOR', '30032', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F9', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(33, 3, 'SMS-2 Fur-10 kWh', 'ACCUMULATOR', '30033', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F10', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(34, 3, 'SMS-2 Fur-11 kWh', 'ACCUMULATOR', '30034', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F11', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(35, 3, 'SMS-2 Fur-12 kWh', 'ACCUMULATOR', '30035', 'kWh', 0.0, 10000000.0, 'SN-SMS2-F12', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(36, 4, 'SMS-4 Fur-1 kWh', 'ACCUMULATOR', '30036', 'kWh', 0.0, 10000000.0, 'SN-SMS4-F1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(37, 4, 'SMS-4 Fur-2 kWh', 'ACCUMULATOR', '30037', 'kWh', 0.0, 10000000.0, 'SN-SMS4-F2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(38, 4, 'SMS-4 Fur-3 kWh', 'ACCUMULATOR', '30038', 'kWh', 0.0, 10000000.0, 'SN-SMS4-F3', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(39, 4, 'SMS-4 Fur-4 kWh', 'ACCUMULATOR', '30039', 'kWh', 0.0, 10000000.0, 'SN-SMS4-F4', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(40, 3, 'SMS-2 Aux-1 kWh', 'ACCUMULATOR', '30040', 'kWh', 0.0, 10000000.0, 'SN-SMS2-A1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(41, 3, 'SMS-2 Aux-2 kWh', 'ACCUMULATOR', '30041', 'kWh', 0.0, 10000000.0, 'SN-SMS2-A2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(42, 4, 'SMS-4 Sint-1 kWh', 'ACCUMULATOR', '30042', 'kWh', 0.0, 10000000.0, 'SN-SMS4-SINT1', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(43, 4, 'SMS-4 Sint-2 kWh', 'ACCUMULATOR', '30043', 'kWh', 0.0, 10000000.0, 'SN-SMS4-SINT2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(44, 4, 'SMS-4 Aux kWh', 'ACCUMULATOR', '30044', 'kWh', 0.0, 10000000.0, 'SN-SMS4-AUX', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(45, 4, 'SMS-4 TR2MVA kWh', 'ACCUMULATOR', '30045', 'kWh', 0.0, 10000000.0, 'SN-SMS4-TR2', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(46, 4, 'SMS-4 TR6MVA kWh', 'ACCUMULATOR', '30046', 'kWh', 0.0, 10000000.0, 'SN-SMS4-TR6', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(47, 4, 'SMS-4 TR3.6MVA kWh', 'ACCUMULATOR', '30047', 'kWh', 0.0, 10000000.0, 'SN-SMS4-TR36', 'v1.0.0', 'ONLINE', '2026-06-30'),
+(48, 4, 'SMS-4 TR5MVA kWh', 'ACCUMULATOR', '30048', 'kWh', 0.0, 10000000.0, 'SN-SMS4-TR5', 'v1.0.0', 'ONLINE', '2026-06-30')
 ON CONFLICT (id) DO NOTHING;

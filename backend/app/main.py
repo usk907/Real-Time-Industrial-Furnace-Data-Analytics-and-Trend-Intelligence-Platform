@@ -1,3 +1,9 @@
+import sys
+import asyncio
+
+if sys.platform == 'win32':
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from backend.app.config import settings
@@ -19,9 +25,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Programmatic database initialization and seeding on application startup
 @app.on_event("startup")
 def on_startup():
+    try:
+        loop = asyncio.get_event_loop()
+        def handle_async_exception(loop, context):
+            exc = context.get("exception")
+            if isinstance(exc, (ConnectionResetError, ConnectionAbortedError, OSError)):
+                return
+            # Silence default connection-drop noise
+        loop.set_exception_handler(handle_async_exception)
+    except Exception:
+        pass
+
     db = SessionLocal()
     try:
         from backend.app.seeder import init_and_seed_db

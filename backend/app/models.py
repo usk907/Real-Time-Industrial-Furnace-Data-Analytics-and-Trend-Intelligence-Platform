@@ -141,3 +141,17 @@ class Notification(Base):
     type = Column(String(20), default="INFO")
     read = Column(Boolean, default=False)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class TapTelemetryReading(Base):
+    __tablename__ = "tap_telemetry_readings"
+    id = Column(Integer, primary_key=True, autoincrement=True, index=True)
+    time = Column(DateTime(timezone=True), nullable=False, index=True)
+    sensor_id = Column(Integer, nullable=False, index=True)
+    sensor_name = Column(String(100), nullable=False)
+    plant = Column(String(100), default="Gary Steel Works")
+    unit = Column(String(20), default="")
+    value = Column(Float, nullable=False)
+    quality = Column(String(20), default="GOOD")
+    status = Column(String(20), default="OK")
+    received_at = Column(DateTime(timezone=True), server_default=func.now())
+

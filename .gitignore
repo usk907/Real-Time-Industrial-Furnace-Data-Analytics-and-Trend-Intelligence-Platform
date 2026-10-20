@@ -42,3 +42,12 @@ Thumbs.db
 # Local Databases
 furnace.db
 *.db
+
+# Android build outputs & caches
+frontend/android/.gradle/
+frontend/android/build/
+frontend/android/app/build/
+frontend/android/capacitor-cordova-android-plugins/build/
+frontend/android/local.properties
+*.apk.idsig
+

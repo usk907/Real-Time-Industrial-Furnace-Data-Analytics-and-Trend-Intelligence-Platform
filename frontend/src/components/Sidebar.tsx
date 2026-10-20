@@ -11,7 +11,9 @@ import {
   Users,
   Shield,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sparkles,
+  Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -32,6 +34,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
     { name: 'Dashboard', path: '/', icon: Activity, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
     { name: 'Live Monitoring', path: '/live', icon: Sliders, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
     { name: 'Trend Analysis', path: '/trends', icon: TrendingUp, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
+    { name: 'Consumption Ledger', path: '/consumption', icon: Zap, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
+    { name: 'AI Database Copilot', path: '/ai-query', icon: Sparkles, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
     { name: 'Advanced Analytics', path: '/analytics', icon: FileText, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
     { name: 'Alarms Console', path: '/alarms', icon: AlertTriangle, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator', 'Viewer'] },
     { name: 'Reports', path: '/reports', icon: FileSpreadsheet, roles: ['Admin', 'Plant Manager', 'Engineer', 'Operator'] },
