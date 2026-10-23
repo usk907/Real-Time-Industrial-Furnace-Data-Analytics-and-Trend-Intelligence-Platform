@@ -1,9 +1,7 @@
 """
-TAP Ingestion Server Models
-Unifies data model definitions by re-exporting TapTelemetryReading and SensorReading
-directly from backend.app.models to ensure synchronized schema metadata across services.
+Legacy tap_server.models shim
+Delegates to services.tap_server.models
 """
-from backend.app.models import TapTelemetryReading, SensorReading
-from tap_server.database import TapBase
+from services.tap_server.models import TapTelemetryReading, SensorReading, TapBase
 
 __all__ = ["TapTelemetryReading", "SensorReading", "TapBase"]

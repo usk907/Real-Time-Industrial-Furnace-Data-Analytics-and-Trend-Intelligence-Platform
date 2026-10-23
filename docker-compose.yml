@@ -60,7 +60,7 @@ services:
   tap_server:
     build:
       context: .
-      dockerfile: tap_server/Dockerfile
+      dockerfile: services/tap_server/Dockerfile
     container_name: ieip_tap_server
     restart: unless-stopped
     ports:
@@ -108,7 +108,7 @@ services:
   simulator:
     build:
       context: .
-      dockerfile: simulator/Dockerfile
+      dockerfile: services/simulator/Dockerfile
     container_name: ieip_simulator
     restart: unless-stopped
     environment:

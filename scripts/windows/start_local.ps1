@@ -21,7 +21,7 @@ if (-not (Test-Path "$RootPath\simulator\venv\Scripts\python.exe")) {
 }
 
 Write-Host "[1/5] Starting TAP Ingestion Server on http://localhost:8001..." -ForegroundColor Yellow
-Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath`" && call backend\venv\Scripts\activate.bat && uvicorn tap_server.main:app --host 0.0.0.0 --port 8001" -WindowStyle Normal
+Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath`" && call backend\venv\Scripts\activate.bat && uvicorn services.tap_server.main:app --host 0.0.0.0 --port 8001" -WindowStyle Normal
 
 Write-Host "[2/5] Starting Main FastAPI Backend on http://localhost:8000..." -ForegroundColor Yellow
 Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath`" && call backend\venv\Scripts\activate.bat && uvicorn backend.app.main:app --host 0.0.0.0 --port 8000" -WindowStyle Normal
@@ -29,7 +29,7 @@ Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath`" && call backend\venv\
 Start-Sleep -Seconds 2
 
 Write-Host "[3/5] Starting 1 Hz SCADA Telemetry Simulator..." -ForegroundColor Yellow
-Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath`" && call simulator\venv\Scripts\activate.bat && python simulator\scada_simulator.py" -WindowStyle Normal
+Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath`" && call simulator\venv\Scripts\activate.bat && python services\simulator\scada_simulator.py" -WindowStyle Normal
 
 Write-Host "[4/5] Starting React + Vite Frontend on http://localhost:5173..." -ForegroundColor Yellow
 Start-Process cmd -ArgumentList "/k", "cd /d `"$RootPath\frontend`" && npm run dev" -WindowStyle Normal
