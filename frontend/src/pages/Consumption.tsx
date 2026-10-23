@@ -102,7 +102,7 @@ export const Consumption: React.FC = () => {
     formData.append('file', selectedFile);
 
     try {
-      const res = await fetch('http://127.0.0.1:8000/api/reports/import-pdf', {
+      const res = await fetch('/api/reports/import-pdf', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
