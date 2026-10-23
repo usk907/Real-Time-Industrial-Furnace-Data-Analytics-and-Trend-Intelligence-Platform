@@ -7,7 +7,14 @@ import requests
 from datetime import datetime, timezone, timedelta
 
 # Default test credentials and tokens
-TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsImV4cCI6MTc5MDE3MjcxM30.wyTOGPz7-la7tcasQBUonkxB3Cd2baXPVjxEe_6hLXA'
+def get_auth_token():
+    try:
+        from backend.app.auth import create_access_token
+        return create_access_token({"sub": "admin", "role": "Admin"})
+    except Exception:
+        return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsImV4cCI6MTc5MDE3MjcxM30.wyTOGPz7-la7tcasQBUonkxB3Cd2baXPVjxEe_6hLXA'
+
+TOKEN = get_auth_token()
 HEADERS = {"Authorization": f"Bearer {TOKEN}"}
 
 # Base URLs configurable via environment variables
