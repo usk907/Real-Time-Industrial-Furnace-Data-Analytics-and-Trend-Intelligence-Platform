@@ -65,6 +65,25 @@ class FurnaceDataGenerator:
                 print(f"[RECONNECT ERROR]: Cannot connect to MySQL at {DB_HOST}:{DB_PORT}. Retrying in 2 seconds... ({e})")
                 time.sleep(2.0)
 
+    def load_latest_state(self):
+        """Loads last recorded values from furnace_latest so cumulative tags and values persist across restarts."""
+        try:
+            conn = self.get_connection()
+            with conn.cursor() as cursor:
+                cursor.execute("SELECT tag, value FROM furnace_latest")
+                rows = cursor.fetchall()
+                loaded = 0
+                for tag_name, val in rows:
+                    if tag_name in self.state:
+                        self.state[tag_name] = float(val)
+                        loaded += 1
+                if loaded > 0:
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Restored {loaded} tag states from furnace_latest (cumulative kWh preserved).")
+                else:
+                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] No previous state found in furnace_latest. Initialized with starting values.")
+        except Exception as e:
+            print(f"[STATE WARNING]: Could not load latest values from furnace_latest: {e}. Using default values.")
+
     def advance_state(self):
         """Advances bounded random walks for all 60 tags and handles anomaly injection."""
         self.tick_count += 1
@@ -159,6 +178,7 @@ class FurnaceDataGenerator:
         """Continuous execution loop."""
         print(f"IEIP Furnace Data Generator started. Interval: {GEN_INTERVAL_SECONDS}s, Tags: {len(TAGS)}")
         print("Press Ctrl+C to stop.")
+        self.load_latest_state()
         ticks_done = 0
         try:
             while True:
