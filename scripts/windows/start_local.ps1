@@ -20,16 +20,25 @@ if (-not (Test-Path "$RootPath\server\venv\Scripts\python.exe")) {
     exit 1
 }
 
-# 2. Check Database Connectivity
-Write-Host "[1/4] Checking MySQL Database connection..." -ForegroundColor Yellow
-$CheckDbScript = "import pymysql; pymysql.connect(host='127.0.0.1', port=3306, user='generator_user', password='GenPassword123!', database='furnace_db')"
+# 2. Check and Start MySQL Database on port 3307
+Write-Host "[1/4] Checking MySQL Database on port 3307..." -ForegroundColor Yellow
+$conn = Get-NetTCPConnection -LocalPort 3307 -ErrorAction SilentlyContinue
+if (-not $conn) {
+    Write-Host "Starting MySQL on port 3307 using PowerPlus local_db..." -ForegroundColor Cyan
+    $MysqldPath = "C:\Program Files\MySQL\MySQL Server 5.7\bin\mysqld.exe"
+    $DataDir = "C:\Users\kusha\New folder (2)\PowerPlus\local_db"
+    if (Test-Path $MysqldPath) {
+        Start-Process $MysqldPath -ArgumentList "--datadir=`"$DataDir`" --port=3307" -WindowStyle Hidden
+        Start-Sleep -Seconds 3
+    }
+}
+
+$CheckDbScript = "import pymysql; pymysql.connect(host='127.0.0.1', port=3307, user='generator_user', password='GenPassword123!', database='furnace_db')"
 $DbOk = & "$RootPath\generator\venv\Scripts\python.exe" -c "$CheckDbScript" 2>&1
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "[WARNING] Could not connect to MySQL as generator_user." -ForegroundColor Yellow
-    Write-Host "If this is your first run, please run scripts\windows\init_database.bat first!" -ForegroundColor Cyan
-    Write-Host ""
+    Write-Host "[WARNING] Could not connect to MySQL as generator_user on port 3307." -ForegroundColor Yellow
 } else {
-    Write-Host "[OK] MySQL connection to furnace_db verified." -ForegroundColor Green
+    Write-Host "[OK] MySQL connection on port 3307 to furnace_db verified." -ForegroundColor Green
 }
 
 # 3. Start Telemetry Generator (Part 1)

@@ -36,7 +36,7 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    DATABASE_URL: str = "mysql+pymysql://server_user:ServerPassword123!@127.0.0.1:3306/furnace_db"
+    DATABASE_URL: str = "mysql+pymysql://server_user:ServerPassword123!@127.0.0.1:3307/furnace_db"
     JWT_SECRET: str = "e9f7d2a8b3c4e5f6a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0"
     JWT_EXPIRE_MINUTES: int = 1440
     ADMIN_USERNAME: str = "admin"
