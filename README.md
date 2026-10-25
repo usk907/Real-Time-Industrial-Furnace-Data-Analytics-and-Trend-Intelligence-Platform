@@ -1,324 +1,201 @@
 # Industrial Energy Intelligence Platform (IEIP)
 
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100.0-emerald.svg?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-18.2.0-blue.svg?style=flat-square&logo=react)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.1.6-blue.svg?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![TimescaleDB](https://img.shields.io/badge/TimescaleDB-PostgreSQL_15-blue.svg?style=flat-square&logo=postgresql)](https://www.timescale.com/)
-[![InfluxDB](https://img.shields.io/badge/InfluxDB-2.7-orange.svg?style=flat-square&logo=influxdb)](https://www.influxdata.com/)
-[![Redis](https://img.shields.io/badge/Redis-7.0-red.svg?style=flat-square&logo=redis)](https://redis.io/)
+A modular, decoupled industrial furnace telemetry, energy monitoring, and SCADA control system built across 3 independent tiers communicating strictly via fixed database and network contracts.
 
-IEIP is a production-quality, modular, and containerized Industrial Energy Monitoring and Analytics Web Application. Inspired by SCADA platforms like Crystal e View, it provides a sleek, high-contrast, dark-themed control-room dashboard built on a modern, decoupled architecture designed for high-density telemetry streams.
+```mermaid
+flowchart LR
+    subgraph Tier1 ["Part 1: Generator"]
+        G["Furnace SCADA Generator<br/>(generator.py • 60 Tags)"]
+    end
 
----
+    subgraph DB ["Local MySQL Database (127.0.0.1:3306)"]
+        FR[("furnace_readings<br/>(Time-Series Archive)")]
+        FL[("furnace_latest<br/>(Real-Time State Cache)")]
+        US[("users<br/>(RBAC Accounts)")]
+        AL[("alarms<br/>(Incident Logs)")]
+    end
 
-## 🏗️ System Architecture & Dual-Database Strategy
+    subgraph Tier2 ["Part 2: Server"]
+        S["FastAPI Telemetry Server<br/>(Port 8000 • SQLAlchemy 2.0)"]
+        B["Broadcaster Task<br/>(1 Query/sec)"]
+        A["Alarm Supervisor<br/>(Min/Max Bounds)"]
+    end
 
-The platform separates fast ingestion paths from heavy query loads by implementing a **dedicated TAP Ingestion Server + SQL storage architecture**:
-1. **SCADA Simulator / Industrial PLC**: Streams 60 real-time tag readings every second (1 Hz).
-2. **TAP Ingestion Server (Port 8001)**: High-performance data tap service that receives raw telemetry streams, buffers them, and writes high-speed batches directly to the SQL Server (`tap_telemetry_readings`).
-3. **SQL Database (TiDB Cloud MySQL / TimescaleDB / SQLite `furnace.db`)**: Stores persistent sensor readings, equipment metadata, alarms, KPIs, and audit logs.
-4. **Main Backend Server (Port 8000)**: Reads from the SQL database to compute plant KPIs, generate linear regression forecasts, serve REST APIs, and broadcast live 1 Hz WebSocket frames (`/api/ws`).
-5. **React SPA & Mobile APK Clients**: Connect over WebSockets and HTTPS to display live dashboards anywhere.
+    subgraph Gateway ["Secure Gateway"]
+        T["Cloudflare Tunnel<br/>(cloudflared • HTTPS / WSS)"]
+    end
 
----
+    subgraph Tier3 ["Part 3: Client"]
+        W["React 18 / Vite Web Dashboard<br/>(Port 5173 • ECharts)"]
+        M["Capacitor Native Android APK<br/>(Mobile Control Room)"]
+    end
 
-## 🖥️ Modular Directory Structure
-
-```text
-├── .env.example                       # Production-ready environment variable template
-├── docker-compose.yml                 # Full 7-service container stack orchestration
-├── README.md                          # Platform documentation
-├── walkthrough.md                     # Architecture walkthrough & technical details
-│
-├── docs/                              # Architecture, runbooks & specification documents
-│   ├── runbook.md                     # Operational procedures, commands, and deployment guides
-│   ├── 1_software_requirements_specification.md
-│   ├── 2_system_architecture_design.md
-│   ├── 3_database_design.md
-│   ├── 4_api_specification.md
-│   └── 5_implementation_guide.md
-│
-├── releases/                          # Pre-compiled release artifacts
-│   └── IEIP-Mobile.apk                # Production Android application (~4.6 MB)
-│
-├── scripts/
-│   ├── windows/                       # Windows automation scripts
-│   │   ├── start_local.bat / .ps1     # One-click Windows/PowerShell launcher for all 4 services
-│   │   ├── stop_local.bat / .ps1      # One-click graceful teardown & port release script
-│   │   ├── tunnel.bat                 # Cloudflare live edge tunnel for remote 4G/5G mobile access
-│   │   └── build_apk.bat              # Automated Android APK compilation script (Capacitor + Gradle)
-│   └── tools/
-│       └── db_tool.py                 # Unified database inspector & interactive SQL query CLI
-│
-├── tests/                             # Unified testing & diagnostics suite
-│   ├── diagnostics.py                 # System connectivity, TAP ingestion, and benchmark suite
-│   ├── helpers.py                     # Shared test session provider, auth tokens & mock data
-│   ├── test_tap_pipeline.py           # Ingestion pipeline validation test
-│   └── test_all_pages.py              # Full 12-page API connectivity benchmark suite
-│
-├── database/
-│   ├── postgres/
-│   │   └── init-db.sql                # PostgreSQL/TimescaleDB relational schemas & seed metadata
-│   └── mysql/
-│       └── mysql_workbench_setup.sql  # MySQL 8.0+ / TiDB schema & seed script
-│
-├── services/                          # Independent operational microservices
-│   ├── tap_server/                    # Dedicated Port 8001 TAP Ingestion Service
-│   │   ├── main.py                    # Fast Ingestion API & buffer management
-│   │   ├── config.py                  # Ingestion settings & buffer configuration
-│   │   ├── database.py                # Database connector
-│   │   ├── models.py                  # SQL schemas
-│   │   └── Dockerfile                 # Container image
-│   ├── simulator/                     # SCADA 1 Hz Telemetry Generator
-│   │   ├── scada_simulator.py         # 1 Hz simulator streaming 60 furnace tags
-│   │   ├── requirements.txt           # Simulator Python requirements
-│   │   └── Dockerfile                 # Container image
-│   └── shared/                        # Shared contracts across services
-│       ├── __init__.py
-│       └── schemas.py                 # Normalized RawTelemetryItem schema
-│
-├── backend/
-│   ├── Dockerfile                     # Multi-stage production container definition
-│   ├── requirements.txt               # Backend Python dependencies (FastAPI, SQLAlchemy, PyMySQL, etc.)
-│   └── app/
-│       ├── main.py                    # FastAPI entrypoint, CORS, startup seed & WebSocket route
-│       ├── config.py                  # BaseSettings loader (.env)
-│       ├── database.py                # SQLAlchemy engine & SessionLocal provider
-│       ├── models.py                  # 15 SQLAlchemy relational database models
-│       ├── schemas.py                 # Pydantic validation models
-│       ├── auth.py                    # JWT authentication & RoleChecker RBAC
-│       ├── router.py                  # Master API router with backward-compatible re-exports
-│       ├── routers/                   # Modular domain-specific sub-routers
-│       │   ├── auth.py                # Authentication, password resets & user CRUD
-│       │   ├── dashboard.py           # Executive dashboard KPIs & summary stats
-│       │   ├── telemetry.py           # Telemetry bulk ingestion, InfluxDB trends & TAP status
-│       │   ├── consumption.py         # PowerPlus cumulative energy ledger & PDF imports
-│       │   ├── analytics.py           # Energy analytics, load distribution & ML models
-│       │   ├── alarms.py              # Alarms console, acknowledgements & notifications
-│       │   ├── reports.py             # CSV report generation & downloads
-│       │   ├── plants.py              # Plants, departments, machines, and devices CRUD
-│       │   ├── settings.py            # Safety thresholds & audit logs
-│       │   └── ai.py                  # AI Chatbot & Natural Language text-to-SQL
-│       ├── services/                  # Business logic & computation services
-│       │   ├── kpi_engine.py          # Rolling averages, load factors, regression & alarms
-│       │   └── ai_copilot.py          # Google Gemini NLP-to-SQL & control room assistant
-│       ├── influx_client.py           # InfluxDB 2.7 time-series client
-│       ├── pdf_importer.py            # CrystalEView SCADA PDF report extractor
-│       ├── seeder.py                  # Automated initial database seeder
-│       └── websocket_manager.py       # High-concurrency WebSocket broadcaster
-│
-├── frontend/
-│   ├── Dockerfile                     # Multi-stage production build (Node 20 -> Nginx)
-│   ├── nginx.conf                     # Nginx reverse proxy for SPA routes, /api, and /api/ws
-│   ├── capacitor.config.ts            # Native Android Capacitor configuration
-│   ├── package.json                   # React 18, Vite, TypeScript, ECharts, Lucide
-│   ├── vite.config.ts                 # Vite bundler with @/ path aliases & API proxy
-│   ├── tsconfig.json                  # TypeScript compiler settings with @/* path mapping
-│   ├── android/                       # Native Android Studio / Gradle project shell
-│   └── src/
-│       ├── main.tsx                   # SPA root mounting
-│       ├── config.ts                  # Dynamic API routing, transparent fetch interceptor & WS URL
-│       ├── index.css                  # Custom styling & dark-theme scrollbars
-│       ├── App.tsx                    # React Router client navigation
-│       ├── api/                       # Centralized typed API client layer
-│       │   ├── client.ts              # Core apiFetch helper with auto Bearer token injection
-│       │   ├── telemetry.ts           # Dashboard, trends, and TAP status calls
-│       │   ├── consumption.ts         # Energy ledger & PDF report import calls
-│       │   ├── alarms.ts              # Alarms & notifications calls
-│       │   └── ai.ts                  # AI chat & SQL copilot calls
-│       ├── utils/
-│       │   └── formatters.ts          # Formatters for kW/MW, kWh/MWh, currency, timestamps
-│       ├── types/
-│       │   └── index.ts               # Domain TypeScript interfaces
-│       ├── context/
-│       │   └── AuthContext.tsx        # Auth state & dynamic WebSocket telemetry provider
-│       ├── components/
-│       │   ├── layout/                # Layout components (Header, Sidebar)
-│       │   ├── common/                # Shared widgets (Chatbot, ServerSettingsModal)
-│       │   ├── Sidebar.tsx            # Navigation sidebar (with layout mirror)
-│       │   ├── Header.tsx             # Top bar with profile & connection status (with layout mirror)
-│       │   ├── ServerSettingsModal.tsx# In-app connection switcher with latency ping check
-│       │   └── Chatbot.tsx            # Floating AI Assistant Chatbot widget
-│       └── pages/
-│           ├── Login.tsx              # Control room login screen
-│           ├── Dashboard.tsx          # Real-time gauges, live charts, and KPI widgets
-│           ├── LiveMonitoring.tsx     # 1 Hz table displaying all 60 tag registers
-│           ├── Trends.tsx             # InfluxDB-based ECharts queries & comparisons
-│           ├── Consumption.tsx        # Shift-wise cumulative energy ledger & sparklines
-│           ├── Analytics.tsx          # Utilization indices, carbon & cost rollups
-│           ├── Alarms.tsx             # Critical alarm alerts console
-│           ├── Reports.tsx            # Daily/Weekly report compilation & CSV/PDF export
-│           ├── AiQuery.tsx            # AI SQL Query Console (NLP to SQL tool)
-│           ├── Management.tsx         # CRUD modal screens for plants, machines, devices, users
-│           ├── Settings.tsx           # Safety range thresholds & Audit log display
-│           └── ResetPassword.tsx      # Secure password reset page
-│
-└── [Legacy Root Forwarders]           # Thin delegating wrappers for 100% backward compatibility
-    ├── start_local.bat / .ps1         # Delegates to scripts/windows/start_local.*
-    ├── stop_local.bat                 # Delegates to scripts/windows/stop_local.*
-    ├── tunnel.bat                     # Delegates to scripts/windows/tunnel.bat
-    ├── build_apk.bat                  # Delegates to scripts/windows/build_apk.bat
-    ├── view_db.py / query_db.py       # Delegates to scripts/tools/db_tool.py
-    ├── run_diagnostics.py             # Delegates to tests/diagnostics.py
-    ├── check_connectivity.py          # Delegates to tests/diagnostics.py
-    ├── test_tap_pipeline.py           # Delegates to tests/test_tap_pipeline.py
-    └── test_all_pages.py              # Delegates to tests/test_all_pages.py
+    G -- "SQL INSERT / REPLACE<br/>(generator_user)" --> DB
+    DB -- "SQL SELECT / UPDATE<br/>(server_user)" --> S
+    S --- B
+    S --- A
+    S -- "REST API & WebSocket" --> W
+    S -- "HTTP (Local)" --> M
+    S -- "Tunnel Forward" --> T
+    T -- "HTTPS & WSS (Internet)" --> M
+    T -- "HTTPS & WSS (Internet)" --> W
 ```
 
 ---
 
-## ⚡ PowerPlus Energy Consumption & SCADA Importer
+## 3-Tier Architecture & Communication Contracts
 
-Integrated from the [PowerPlus](https://github.com/Mayur-112005/powerplus.git) architecture:
-
-1. **Daily Energy Consumption Ledger (`/consumption`)**:
-   - Real-time date selector and shift filtering (**Shift A**: 06:00–14:00, **Shift B**: 14:00–22:00, **Shift C**: 22:00–06:00, **All Day**).
-   - High-contrast summary metrics for **Total Active Energy (`kWh`)**, **Apparent Energy (`kVAh`)**, **Reactive Energy (`kVArh`)**, **Peak Demand (`kW`)**, **Average Power Factor**, and **Cost & Carbon Estimates**.
-   - Grouped equipment registers (Furnaces, Auxiliary Transformers, Rolling Mills, Water Treatment) with inline 4-hour sparklines and min/avg/max statistics.
-   - One-click **CSV/Excel Export** of filtered ledgers.
-
-2. **CrystalEView SCADA PDF Report Importer**:
-   - Backend endpoint `POST /api/reports/import-pdf` powered by `pdfplumber`.
-   - Direct upload from the frontend UI to extract tabular columns from real CrystalEView / SCADA energy PDF reports, automatically mapping headers to register tags and syncing history to the database.
+| Tier | Component | Directory | Responsibility | Contract |
+| :--- | :--- | :--- | :--- | :--- |
+| **Tier 1** | **Telemetry Generator** | [`generator/`](file:///c:/Users/kusha/trends%20analysis/generator/) | Generates realistic telemetry for 60 industrial tags every second using bounded random walks. | Writes to MySQL `furnace_readings` and `furnace_latest` via atomic `executemany` transactions. |
+| **Database** | **Local MySQL 8** | [`db/`](file:///c:/Users/kusha/trends%20analysis/db/) | Relational time-series and state cache storage bound strictly to `127.0.0.1:3306`. | [`db/schema.sql`](file:///c:/Users/kusha/trends%20analysis/db/schema.sql) & [`db/create_users.sql`](file:///c:/Users/kusha/trends%20analysis/db/create_users.sql). |
+| **Tier 2** | **Backend Server** | [`server/`](file:///c:/Users/kusha/trends%20analysis/server/) | FastAPI telemetry backend, JWT authentication, downsampled SQL history, multiplexed WebSocket broadcaster, background alarm supervisor. | Exposes REST & WebSocket API on port 8000; never writes to readings tables. |
+| **Tier 3** | **Client & Mobile APK** | [`client/`](file:///c:/Users/kusha/trends%20analysis/client/) | Dark control-room UI (React 18 + Vite + TypeScript) and native Android APK (Capacitor). | Consumes REST + WebSocket API via [`client/src/config.ts`](file:///c:/Users/kusha/trends%20analysis/client/src/config.ts). Never connects to MySQL. |
 
 ---
 
-## 🚀 Execution & Quick Start
+## Network Ports & Exposure Rules
 
-### Option A: One-Click Windows Launch (Recommended)
-Simply double-click [`start_local.bat`](./start_local.bat) or run:
+| Port | Service | Bound To | Exposure Rules |
+| :--- | :--- | :--- | :--- |
+| **3306** | MySQL Database | `127.0.0.1` | **NEVER exposed.** Localhost connection only. No remote root access. |
+| **8000** | FastAPI Backend | `127.0.0.1` | Local development. Made public **ONLY** via Cloudflare Tunnel (`cloudflared`). |
+| **5173** | Vite Dev Server | `127.0.0.1` | Local developer dashboard. |
+| **HTTPS/WSS** | Cloudflare Public Gateway | Cloudflare Edge | Public encrypted entrypoint for browser and mobile Android APK. |
+
+---
+
+## Environment Variables
+
+### Part 1: Generator (`generator/.env`)
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `DB_HOST` | `127.0.0.1` | MySQL server hostname (binds to localhost). |
+| `DB_PORT` | `3306` | MySQL server port. |
+| `DB_USER` | `generator_user` | Least-privilege MySQL user (INSERT/REPLACE on readings only). |
+| `DB_PASSWORD` | `GenPassword123!` | Password for `generator_user`. |
+| `DB_NAME` | `furnace_db` | Target database name. |
+| `GEN_INTERVAL_SECONDS` | `1.0` | Cadence of telemetry emission in seconds. |
+| `LOG_INTERVAL_TICKS` | `10` | Output logging cadence (1 line per 10 ticks). |
+
+### Part 2: Server (`server/.env`)
+| Variable | Default | Description |
+| :--- | :--- | :--- |
+| `DATABASE_URL` | `mysql+pymysql://server_user:...@127.0.0.1:3306/furnace_db` | SQLAlchemy connection string using `server_user`. |
+| `JWT_SECRET` | *Strong Random String (Min 32 chars)* | Secret key for signing bearer tokens. Server refuses to start if placeholder is used. |
+| `JWT_EXPIRE_MINUTES` | `1440` | JWT token validity lifespan (24 hours). |
+| `ADMIN_USERNAME` | `admin` | Initial admin username auto-seeded if user table is empty. |
+| `ADMIN_PASSWORD` | *Strong Password (Min 8 chars)* | Initial admin password. Server refuses to start if placeholder is used. |
+| `CORS_ORIGINS` | `http://localhost:5173,http://127.0.0.1:5173` | Explicit whitelist of allowed browser origins (never `*`). |
+| `WS_PUSH_INTERVAL_SECONDS` | `1.0` | Multiplexed WebSocket broadcasting interval. |
+
+---
+
+## Start Order & Operating Instructions
+
+To start the platform on your Windows machine, execute the launchers in the following sequence:
+
+### 1. Initialize Database (First-Time Setup Only)
+Apply the database schema and least-privilege users:
+```bash
+mysql -u root -p < db/schema.sql
+mysql -u root -p < db/create_users.sql
+```
+
+### 2. Start Telemetry Generator (Part 1)
+Double-click [`scripts/windows/start_generator.bat`](file:///c:/Users/kusha/trends%20analysis/scripts/windows/start_generator.bat) or run:
 ```powershell
-.\scripts\windows\start_local.ps1
+.\generator\venv\Scripts\python.exe generator\generator.py
 ```
-This automatically starts all 4 services and opens your browser:
-1. **TAP Ingestion Server** on `http://localhost:8001`
-2. **FastAPI Backend** on `http://localhost:8000`
-3. **1 Hz SCADA Simulator** streaming live telemetry
-4. **React + Vite Frontend** on `http://localhost:5173`
+*Restores previous tag states from `furnace_latest` to preserve cumulative kWh tags across restarts, then emits 60 tags per second.*
 
-To cleanly shut down all services at any time, run [`stop_local.bat`](./stop_local.bat) or `.\scripts\windows\stop_local.ps1`.
+### 3. Start Backend Server (Part 2)
+Double-click [`scripts/windows/start_server.bat`](file:///c:/Users/kusha/trends%20analysis/scripts/windows/start_server.bat) or run:
+```powershell
+.\server\venv\Scripts\python.exe -m uvicorn server.app.main:app --host 127.0.0.1 --port 8000 --reload
+```
+*Seeds initial admin account, initiates the background broadcaster, and supervises live alarm thresholds.*
 
----
-
-### Option B: Docker Compose (Full Container Stack)
-Run the entire production stack (TimescaleDB, InfluxDB 2.7, Redis 7.0, TAP Server, FastAPI Backend, 1 Hz Simulator, and Frontend Nginx) in one command:
+### 4. Start Frontend Client (Part 3)
+Double-click [`scripts/windows/start_client.bat`](file:///c:/Users/kusha/trends%20analysis/scripts/windows/start_client.bat) or run:
 ```bash
-docker compose up -d
+cd client
+npm run dev -- --host 127.0.0.1 --port 5173
 ```
-Access the dashboard at `http://localhost:5173` (or port 80).
+*Opens the dark control-room dashboard at `http://127.0.0.1:5173`.*
 
----
-
-### Option C: Remote 4G/5G Access & Cloudflare Tunnel
-To access the live platform from your mobile phone or outside the local network without port forwarding:
-```cmd
-.\scripts\windows\tunnel.bat
-```
-This generates a secure, passwordless `https://*.trycloudflare.com` URL that proxies both the frontend and backend WebSocket/REST telemetry streams.
-
----
-
-### Option D: Mobile Android APK
-- **Pre-Built APK**: A ready-to-install Android package is available in the releases folder:
-  👉 **[`releases/IEIP-Mobile.apk`](./releases/IEIP-Mobile.apk)** *(~4.6 MB)*
-- **In-App Server Switcher**: Tapping the **Backend Link** pill in the top header opens the Connection Settings modal where you can point the app to any LAN IP (`http://192.168.x.x:8000`), Android emulator (`http://10.0.2.2:8000`), or Cloudflare live tunnel, complete with instant latency ping checks.
-- **Rebuilding from Source**:
-  Run [`scripts/windows/build_apk.bat`](./scripts/windows/build_apk.bat) to compile the APK from source using Capacitor 8 and Gradle.
-
----
-
-### Option E: Manual Multi-Terminal Launch
-**Prerequisites**: Python 3.10+ and Node.js 18+ installed on your host system.
-
-Open separate terminal windows in the project root:
-
-1. **Start the TAP Ingestion Server**:
-   ```bash
-   .\backend\venv\Scripts\activate
-   uvicorn services.tap_server.main:app --host 0.0.0.0 --port 8001
-   ```
-2. **Start the FastAPI Backend**:
-   ```bash
-   .\backend\venv\Scripts\activate
-   uvicorn backend.app.main:app --host 0.0.0.0 --port 8000
-   ```
-3. **Start the Telemetry Simulator**:
-   ```bash
-   .\simulator\venv\Scripts\activate
-   python services\simulator\scada_simulator.py
-   ```
-4. **Start the React Frontend**:
-   ```bash
-   cd frontend
-   npm run dev
-   ```
-   Open **`http://localhost:5173/`** in your browser.
-
----
-
-## 🗄️ Database Configuration & Inspection
-
-### 1. Database Connection Configuration
-By default, if no external database is detected, the backend falls back to local SQLite (`furnace.db`). To link your local MySQL or TimescaleDB instance:
-1. Copy `.env.example` to `.env` in the project root.
-2. Update the `DATABASE_URL` variable:
-   ```ini
-   DATABASE_URL=mysql+pymysql://<user>:<password>@127.0.0.1:3306/furnace_db
-   ```
-3. The backend will compile the schemas and seed all initial metadata automatically on next startup.
-
-### 2. Inspecting the Database (`db_tool.py`)
-A unified CLI database inspection and query tool is available under `scripts/tools/db_tool.py` (with root wrappers `view_db.py` and `query_db.py`):
+### 5. Expose Secure Public Tunnel (Optional / For Mobile APK)
+Double-click [`scripts/windows/start_tunnel.bat`](file:///c:/Users/kusha/trends%20analysis/scripts/windows/start_tunnel.bat) or run:
 ```bash
-# View table record counts, active alarms, and latest telemetry
-python scripts/tools/db_tool.py --inspect
-
-# Execute an arbitrary SQL query with formatted tabular output
-python scripts/tools/db_tool.py "SELECT id, username, email FROM users;"
+cloudflared tunnel --url http://localhost:8000
 ```
+*Generates a public URL (e.g. `https://xxxx.trycloudflare.com`) giving secure HTTPS and WSS access.*
 
 ---
 
-## 🧪 Testing & System Diagnostics
+## Mobile Android APK (Capacitor)
 
-Centralized under `tests/`:
-
-```bash
-# Run database & service connectivity check
-python tests/diagnostics.py --connectivity
-
-# Run TAP server 8001 ingestion batch verification
-python tests/diagnostics.py --tap
-
-# Run comprehensive latency benchmark across all 12 page APIs
-python tests/diagnostics.py --pages
-
-# Run the full diagnostic suite
-python tests/diagnostics.py --all
-```
-
----
-
-## 🔒 Security Profiles & Credentials
-
-The platform implements strict JWT authentication. Security checks are enforced via role validation:
-- **Admin**: Full access (CRUD on all plants, machines, devices, users, and modifying settings).
-- **Plant Manager**: Full CRUD access on plants/departments/machines, views reports, and acknowledges alarms.
-- **Engineer**: Read-only access to configurations, can register new machines, download reports, and acknowledge alarms.
-- **Operator**: Read-only dashboards and alarms log, can acknowledge alarms.
-- **Viewer**: Read-only dashboards.
-
-### Seed Verification Logins (Username / Password)
-- **Admin**: `admin` / `admin123`
-- *(New users can be registered dynamically via the Management tab by an administrator).*
-
----
-
-## 🔌 Future Protocols & AI Integration
-
-- **Industrial Hardware Protocols**: The architecture is decoupled so that `scada_simulator.py` can be replaced with standard driver daemons (e.g. using `pymodbus` or `asyncua` for Modbus TCP/OPC-UA links) pointing to `/api/readings/bulk` without any modifications required on the backend database or frontend dashboards.
-- **AI Modules**: In `/api/analytics`, placeholder routes are prepared for LSTM-based anomaly detection, predictive remaining useful life (RUL) estimation on electrodes, and PatchTST transformer demand forecasting.
-- **AI SQL Query Copilot (Integrated)**: The platform features a natural language database assistant ("AI Database Copilot"). It dynamically translates operator queries in plain English into secure, read-only SQL queries, executes them, and returns both structured table results and natural language summaries. To enable this, add your Google Gemini API key to `.env`:
-   ```ini
-   GEMINI_API_KEY=your_gemini_api_key_here
+The mobile client is packaged as a native Android APK using Capacitor.
+1. Run the build pipeline launcher:
+   ```powershell
+   .\scripts\windows\build_apk.bat
    ```
+2. The script compiles the React web bundle, synchronizes assets to native Android, and outputs the debug binary in:
+   ```text
+   client/android/app/build/outputs/apk/debug/app-debug.apk
+   ```
+3. Open the app on your mobile device, tap the **Backend Link** button in the header, and paste your public Cloudflare Tunnel URL or local Wi-Fi IP to stream real-time telemetry anywhere.
+
+---
+
+## Security Model
+
+1. **Least-Privilege Database Isolation**:
+   - `generator_user`: INSERT and REPLACE rights on `furnace_readings` and `furnace_latest` only. Cannot read user accounts or alter schemas.
+   - `server_user`: SELECT rights on readings tables; SELECT, INSERT, UPDATE on users and alarms. The server can never alter telemetry readings.
+   - `admin_user`: Maintenance and retention operations only.
+2. **Localhost Binding**:
+   - MySQL binds strictly to `127.0.0.1`. Port 3306 is blocked from external networks.
+3. **No String-Built Queries**:
+   - All historical and live SQL statements use strict parameterized statements (`:tag`, `:from_ts`, `:to_ts`).
+4. **Placeholder Password Rejection**:
+   - The server inspects `JWT_SECRET` and `ADMIN_PASSWORD` at launch and refuses to start if insecure placeholder strings are found.
+5. **SlowAPI Rate Limiting**:
+   - The login route (`POST /api/auth/login`) is throttled to 5 requests per minute per IP address.
+
+---
+
+## Automated Verification Suite
+
+Run the test suite from the repository root:
+```powershell
+# 1. Generator Tag Bounds & Cumulative Monotonicity
+.\server\venv\Scripts\python.exe tests/test_generator_tags.py
+
+# 2. Server Authentication, JWT, and Live Telemetry
+.\server\venv\Scripts\python.exe -m pytest tests/test_server_auth.py tests/test_server_live.py
+
+# 3. Live WebSocket 3-Frame Stream Verification
+.\server\venv\Scripts\python.exe tests/test_ws_client.py
+
+# 4. End-to-End System Smoke Test (Generator -> MySQL -> Server /api/live)
+.\server\venv\Scripts\python.exe tests/smoke.py
+```
+
+---
+
+## Data Retention Policy
+A 7-day retention cleaner is provided to prevent unbounded disk growth:
+- **SQL Script**: [`scripts/prune_readings.sql`](file:///c:/Users/kusha/trends%20analysis/scripts/prune_readings.sql)
+- **Python Runner**: [`scripts/prune_readings.py`](file:///c:/Users/kusha/trends%20analysis/scripts/prune_readings.py) (can be scheduled via Windows Task Scheduler).
+
+---
+
+## Legacy Code Archive (`legacy/`)
+
+In accordance with strict architectural preservation rules, all previous components were relocated rather than deleted:
+- `legacy/services/tap_server/`: High-throughput TAP ingestion server.
+- `legacy/services/simulator/`: Multi-furnace SCADA hardware emulator.
+- `legacy/influx_client.py`: InfluxDB client and telemetry points builder.
+- `legacy/server_archive/`: Monolithic routers (`router.py`, `dashboard.py`, `consumption.py`, `plants.py`, `analytics.py`, `reports.py`, `settings.py`), PDF invoice importer, and AI text-to-SQL copilot (`ai_copilot.py`).
+- `legacy/database/`: Previous MySQL Workbench setup scripts and Postgres Docker initialization mounts.
