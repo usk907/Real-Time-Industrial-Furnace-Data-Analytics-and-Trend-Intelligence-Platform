@@ -41,6 +41,7 @@ CREATE TABLE IF NOT EXISTS alarms (
     severity VARCHAR(32) NOT NULL DEFAULT 'WARNING',
     acknowledged BOOLEAN NOT NULL DEFAULT FALSE,
     acknowledged_by VARCHAR(64) NULL,
+    resolved_at DATETIME(3) NULL,
     INDEX idx_alarm_ts (ts),
     INDEX idx_alarm_tag (tag)
 ) ENGINE=InnoDB;

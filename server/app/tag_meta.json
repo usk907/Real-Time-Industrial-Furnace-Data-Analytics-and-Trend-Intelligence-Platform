@@ -1,0 +1,602 @@
+[
+  {
+    "name": "EAF1_Active_Power",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "kW",
+    "start": 42000.0,
+    "min": 15000.0,
+    "max": 55000.0,
+    "step": 450.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Apparent_Power",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "kVA",
+    "start": 48000.0,
+    "min": 18000.0,
+    "max": 62000.0,
+    "step": 500.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Reactive_Power",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "kVAr",
+    "start": 23000.0,
+    "min": 8000.0,
+    "max": 30000.0,
+    "step": 300.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Voltage",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "V",
+    "start": 680.0,
+    "min": 580.0,
+    "max": 750.0,
+    "step": 4.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Current",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "kA",
+    "start": 45.0,
+    "min": 20.0,
+    "max": 60.0,
+    "step": 0.5,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Power_Factor",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "",
+    "start": 0.88,
+    "min": 0.75,
+    "max": 0.96,
+    "step": 0.005,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Shell_Temp",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "\u00b0C",
+    "start": 320.0,
+    "min": 180.0,
+    "max": 450.0,
+    "step": 1.5,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Roof_Temp",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "\u00b0C",
+    "start": 480.0,
+    "min": 250.0,
+    "max": 650.0,
+    "step": 2.5,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Bath_Temp",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "\u00b0C",
+    "start": 1580.0,
+    "min": 1450.0,
+    "max": 1680.0,
+    "step": 3.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Cooling_Water_Flow",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "m\u00b3/h",
+    "start": 450.0,
+    "min": 350.0,
+    "max": 520.0,
+    "step": 2.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Cooling_Water_Pressure",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "bar",
+    "start": 4.5,
+    "min": 3.2,
+    "max": 6.0,
+    "step": 0.05,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Hydraulic_Pressure",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "bar",
+    "start": 160.0,
+    "min": 130.0,
+    "max": 185.0,
+    "step": 1.0,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Electrode_Reg_Current",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "kA",
+    "start": 42.0,
+    "min": 25.0,
+    "max": 55.0,
+    "step": 0.4,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Fume_Gas_Pressure",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "mbar",
+    "start": -2.5,
+    "min": -5.0,
+    "max": -0.5,
+    "step": 0.1,
+    "cumulative": false
+  },
+  {
+    "name": "EAF1_Cumulative_Energy",
+    "equipment": "Electric Arc Furnace 1",
+    "unit": "kWh",
+    "start": 1284500.0,
+    "min": 1000000.0,
+    "max": 50000000.0,
+    "step": 11.6,
+    "cumulative": true
+  },
+  {
+    "name": "LRF2_Active_Power",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "kW",
+    "start": 14500.0,
+    "min": 4000.0,
+    "max": 22000.0,
+    "step": 200.0,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Apparent_Power",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "kVA",
+    "start": 16500.0,
+    "min": 5000.0,
+    "max": 25000.0,
+    "step": 220.0,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Reactive_Power",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "kVAr",
+    "start": 7800.0,
+    "min": 2500.0,
+    "max": 12000.0,
+    "step": 150.0,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Voltage",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "V",
+    "start": 380.0,
+    "min": 320.0,
+    "max": 440.0,
+    "step": 2.5,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Current",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "kA",
+    "start": 22.0,
+    "min": 8.0,
+    "max": 32.0,
+    "step": 0.3,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Power_Factor",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "",
+    "start": 0.89,
+    "min": 0.8,
+    "max": 0.97,
+    "step": 0.004,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Bath_Temp",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "\u00b0C",
+    "start": 1620.0,
+    "min": 1520.0,
+    "max": 1690.0,
+    "step": 2.0,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Argon_Stirring_Flow",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "Nm\u00b3/h",
+    "start": 45.0,
+    "min": 15.0,
+    "max": 90.0,
+    "step": 0.8,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Argon_Pressure",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "bar",
+    "start": 7.5,
+    "min": 5.0,
+    "max": 10.0,
+    "step": 0.05,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Cooling_Water_Flow",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "m\u00b3/h",
+    "start": 280.0,
+    "min": 220.0,
+    "max": 340.0,
+    "step": 1.2,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Cooling_Water_Temp",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "\u00b0C",
+    "start": 42.0,
+    "min": 28.0,
+    "max": 65.0,
+    "step": 0.2,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Vacuum_Pressure",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "mbar",
+    "start": 1.2,
+    "min": 0.5,
+    "max": 3.0,
+    "step": 0.04,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Electrode_A_Current",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "kA",
+    "start": 21.5,
+    "min": 10.0,
+    "max": 30.0,
+    "step": 0.3,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Heating_Rate",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "\u00b0C/min",
+    "start": 3.8,
+    "min": 1.0,
+    "max": 6.5,
+    "step": 0.1,
+    "cumulative": false
+  },
+  {
+    "name": "LRF2_Cumulative_Energy",
+    "equipment": "Ladle Refining Furnace 2",
+    "unit": "kWh",
+    "start": 642300.0,
+    "min": 500000.0,
+    "max": 25000000.0,
+    "step": 4.1,
+    "cumulative": true
+  },
+  {
+    "name": "TR1_Incoming_Voltage",
+    "equipment": "Main Substation",
+    "unit": "kV",
+    "start": 33.2,
+    "min": 31.0,
+    "max": 35.0,
+    "step": 0.05,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Secondary_Voltage",
+    "equipment": "Main Substation",
+    "unit": "V",
+    "start": 690.0,
+    "min": 650.0,
+    "max": 725.0,
+    "step": 1.5,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Primary_Current",
+    "equipment": "Main Substation",
+    "unit": "A",
+    "start": 820.0,
+    "min": 300.0,
+    "max": 1150.0,
+    "step": 8.0,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Secondary_Current",
+    "equipment": "Main Substation",
+    "unit": "kA",
+    "start": 38.5,
+    "min": 15.0,
+    "max": 52.0,
+    "step": 0.4,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Active_Power",
+    "equipment": "Main Substation",
+    "unit": "kW",
+    "start": 44500.0,
+    "min": 16000.0,
+    "max": 58000.0,
+    "step": 350.0,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Apparent_Power",
+    "equipment": "Main Substation",
+    "unit": "kVA",
+    "start": 49000.0,
+    "min": 18000.0,
+    "max": 63000.0,
+    "step": 400.0,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Reactive_Power",
+    "equipment": "Main Substation",
+    "unit": "kVAr",
+    "start": 20500.0,
+    "min": 7000.0,
+    "max": 28000.0,
+    "step": 250.0,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Power_Factor",
+    "equipment": "Main Substation",
+    "unit": "",
+    "start": 0.91,
+    "min": 0.82,
+    "max": 0.98,
+    "step": 0.003,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Winding_Temp",
+    "equipment": "Main Substation",
+    "unit": "\u00b0C",
+    "start": 78.0,
+    "min": 45.0,
+    "max": 110.0,
+    "step": 0.3,
+    "cumulative": false
+  },
+  {
+    "name": "TR1_Oil_Temp",
+    "equipment": "Main Substation",
+    "unit": "\u00b0C",
+    "start": 62.0,
+    "min": 35.0,
+    "max": 88.0,
+    "step": 0.2,
+    "cumulative": false
+  },
+  {
+    "name": "TR2_Incoming_Voltage",
+    "equipment": "Main Substation",
+    "unit": "kV",
+    "start": 33.1,
+    "min": 31.0,
+    "max": 35.0,
+    "step": 0.05,
+    "cumulative": false
+  },
+  {
+    "name": "TR2_Active_Power",
+    "equipment": "Main Substation",
+    "unit": "kW",
+    "start": 16800.0,
+    "min": 5000.0,
+    "max": 26000.0,
+    "step": 180.0,
+    "cumulative": false
+  },
+  {
+    "name": "TR2_Power_Factor",
+    "equipment": "Main Substation",
+    "unit": "",
+    "start": 0.92,
+    "min": 0.84,
+    "max": 0.98,
+    "step": 0.003,
+    "cumulative": false
+  },
+  {
+    "name": "TR2_Winding_Temp",
+    "equipment": "Main Substation",
+    "unit": "\u00b0C",
+    "start": 71.0,
+    "min": 40.0,
+    "max": 105.0,
+    "step": 0.2,
+    "cumulative": false
+  },
+  {
+    "name": "Grid_Import_Cumulative_Energy",
+    "equipment": "Main Substation",
+    "unit": "kWh",
+    "start": 4892100.0,
+    "min": 3000000.0,
+    "max": 90000000.0,
+    "step": 17.0,
+    "cumulative": true
+  },
+  {
+    "name": "RM1_Stand1_Drive_Power",
+    "equipment": "Hot Rolling Mill",
+    "unit": "kW",
+    "start": 4200.0,
+    "min": 1200.0,
+    "max": 6500.0,
+    "step": 80.0,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Stand1_Speed",
+    "equipment": "Hot Rolling Mill",
+    "unit": "RPM",
+    "start": 850.0,
+    "min": 500.0,
+    "max": 1200.0,
+    "step": 10.0,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Stand1_Motor_Current",
+    "equipment": "Hot Rolling Mill",
+    "unit": "A",
+    "start": 1420.0,
+    "min": 600.0,
+    "max": 2200.0,
+    "step": 25.0,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Reheat_Furnace_Zone1_Temp",
+    "equipment": "Hot Rolling Mill",
+    "unit": "\u00b0C",
+    "start": 1180.0,
+    "min": 950.0,
+    "max": 1280.0,
+    "step": 1.2,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Reheat_Furnace_Zone2_Temp",
+    "equipment": "Hot Rolling Mill",
+    "unit": "\u00b0C",
+    "start": 1240.0,
+    "min": 1050.0,
+    "max": 1320.0,
+    "step": 1.0,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Hydraulic_Descaler_Pressure",
+    "equipment": "Hot Rolling Mill",
+    "unit": "bar",
+    "start": 180.0,
+    "min": 140.0,
+    "max": 230.0,
+    "step": 1.5,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Cooling_Water_Flow",
+    "equipment": "Hot Rolling Mill",
+    "unit": "m\u00b3/h",
+    "start": 320.0,
+    "min": 240.0,
+    "max": 400.0,
+    "step": 1.8,
+    "cumulative": false
+  },
+  {
+    "name": "RM1_Cumulative_Energy",
+    "equipment": "Hot Rolling Mill",
+    "unit": "kWh",
+    "start": 894200.0,
+    "min": 500000.0,
+    "max": 30000000.0,
+    "step": 3.8,
+    "cumulative": true
+  },
+  {
+    "name": "WTP_Main_Pump1_Power",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "kW",
+    "start": 340.0,
+    "min": 150.0,
+    "max": 500.0,
+    "step": 5.0,
+    "cumulative": false
+  },
+  {
+    "name": "WTP_Main_Pump1_Current",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "A",
+    "start": 410.0,
+    "min": 200.0,
+    "max": 600.0,
+    "step": 6.0,
+    "cumulative": false
+  },
+  {
+    "name": "WTP_Supply_Header_Pressure",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "bar",
+    "start": 5.8,
+    "min": 4.5,
+    "max": 7.5,
+    "step": 0.04,
+    "cumulative": false
+  },
+  {
+    "name": "WTP_Supply_Header_Flow",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "m\u00b3/h",
+    "start": 1150.0,
+    "min": 800.0,
+    "max": 1450.0,
+    "step": 5.0,
+    "cumulative": false
+  },
+  {
+    "name": "WTP_Supply_Header_Temp",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "\u00b0C",
+    "start": 26.5,
+    "min": 18.0,
+    "max": 38.0,
+    "step": 0.1,
+    "cumulative": false
+  },
+  {
+    "name": "WTP_Return_Header_Temp",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "\u00b0C",
+    "start": 44.0,
+    "min": 30.0,
+    "max": 60.0,
+    "step": 0.15,
+    "cumulative": false
+  },
+  {
+    "name": "WTP_Cumulative_Energy",
+    "equipment": "Water Treatment & Utilities",
+    "unit": "kWh",
+    "start": 315400.0,
+    "min": 200000.0,
+    "max": 15000000.0,
+    "step": 1.2,
+    "cumulative": true
+  }
+]

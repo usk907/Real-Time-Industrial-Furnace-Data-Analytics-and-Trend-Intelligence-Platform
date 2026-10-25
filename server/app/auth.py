@@ -1,84 +1,85 @@
+"""
+Authentication & Role-Based Access Control (RBAC) Module
+JWT token issuance, bcrypt verification, and role dependencies.
+"""
 from datetime import datetime, timedelta, timezone
-from typing import Optional, List
-import os
-import redis
-import bcrypt
-from jose import jwt, JWTError
+from typing import List, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError, jwt
+from passlib.context import CryptContext
 from sqlalchemy.orm import Session
+from server.app.config import settings
+from server.app.database import get_db
+from server.app.models import User
 
-from backend.app.config import settings
-from backend.app.database import get_db
-from backend.app.models import User, Role
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/login", auto_error=False)
+ALGORITHM = "HS256"
 
-# Token blacklist (Redis with in-memory fallback)
-in_memory_blacklist: set[str] = set()
-redis_client = None
-try:
-    redis_client = redis.from_url(os.getenv("REDIS_URL", "redis://localhost:6379/0"), decode_responses=True, socket_connect_timeout=0.5)
-    redis_client.ping()
-except Exception:
-    redis_client = None
+# Role hierarchy levels (lower number = higher privilege)
+ROLE_HIERARCHY = {
+    "admin": 1,
+    "manager": 2,
+    "engineer": 3,
+    "operator": 4,
+    "viewer": 5
+}
 
-def verify_password(plain: str, hashed: str) -> bool:
-    try:
-        return bcrypt.checkpw(plain.encode(), hashed.encode())
-    except Exception:
-        return False
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
 
 def get_password_hash(password: str) -> str:
-    return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    return pwd_context.hash(password)
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
-    return jwt.encode({**data, "exp": expire}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.now(timezone.utc) + expires_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=settings.JWT_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=ALGORITHM)
 
-def blacklist_token(token: str, expire_seconds: int = 28800):
+def decode_access_token(token: str) -> dict:
+    """Decodes and validates a JWT token string."""
     try:
-        if redis_client:
-            return redis_client.setex(f"blacklist:{token}", expire_seconds, "true")
-    except Exception:
-        pass
-    in_memory_blacklist.add(token)
-
-def is_token_blacklisted(token: str) -> bool:
-    try:
-        if redis_client and redis_client.exists(f"blacklist:{token}"):
-            return True
-    except Exception:
-        pass
-    return token in in_memory_blacklist
+        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[ALGORITHM])
+        return payload
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
 def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)) -> User:
-    unauthorized = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-    if not token or is_token_blacklisted(token):
-        raise unauthorized
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        username: str = payload.get("sub")
-        if not username:
-            raise unauthorized
-    except JWTError:
-        raise unauthorized
-        
-    user = db.query(User).filter(User.username == username, User.is_active.is_(True)).first()
-    if not user:
-        raise unauthorized
+    """Dependency for extracting and verifying user identity from bearer token."""
+    payload = decode_access_token(token)
+    username: str = payload.get("sub")
+    if username is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token payload missing subject identifier",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    user = db.query(User).filter(User.username == username).first()
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return user
 
-class RoleChecker:
-    def __init__(self, allowed_roles: List[str]):
-        self.allowed_roles = allowed_roles
-
-    def __call__(self, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-        role = db.query(Role).filter(Role.id == user.role_id).first()
-        if not role or role.name not in self.allowed_roles:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden: Insufficient privileges")
-        return user
+def require_roles(allowed_roles: List[str]):
+    """Role-based authorization dependency factory."""
+    def role_checker(current_user: User = Depends(get_current_user)) -> User:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Operation not permitted. Required roles: {allowed_roles}, your role: '{current_user.role}'"
+            )
+        return current_user
+    return role_checker

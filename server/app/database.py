@@ -1,38 +1,34 @@
+"""
+Database Connection & Session Management
+SQLAlchemy 2.0 Engine with PyMySQL pooling connecting to MySQL as server_user.
+"""
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from backend.app.config import settings
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
+from server.app.config import settings
 
-database_url = settings.DATABASE_URL
-engine = None
+# PyMySQL pool configuration
+engine = create_engine(
+    settings.DATABASE_URL,
+    pool_pre_ping=True,
+    pool_size=15,
+    max_overflow=25,
+    pool_timeout=10,
+    pool_recycle=1800,
+    future=True
+)
 
-if "postgresql" in database_url or "mysql" in database_url:
-    try:
-        # Test connection to check if it's online
-        print(f"[DATABASE]: Testing connection to database at {database_url}...")
-        temp_engine = create_engine(
-            database_url,
-            pool_pre_ping=True,
-            pool_size=25,
-            max_overflow=50,
-            pool_timeout=10,
-            pool_recycle=1800
-        )
-        conn = temp_engine.connect()
-        conn.close()
-        engine = temp_engine
-        print("[DATABASE]: Successfully connected to database.")
-    except Exception as e:
-        print(f"[DATABASE WARNING]: Remote database is offline or unreachable: {e}")
-        print("[DATABASE]: Falling back to local SQLite database (furnace.db) for zero-setup execution...")
-        database_url = "sqlite:///./furnace.db"
-        engine = create_engine(database_url, connect_args={"check_same_thread": False})
+SessionLocal = sessionmaker(
+    bind=engine,
+    autocommit=False,
+    autoflush=False,
+    expire_on_commit=False,
+    class_=Session
+)
 
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
-    """Dependency injection to provide database sessions."""
+    """FastAPI dependency for yielding database session."""
     db = SessionLocal()
     try:
         yield db

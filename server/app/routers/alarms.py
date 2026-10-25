@@ -1,78 +1,64 @@
 """
-IEIP Alarms Console & Notifications Router
-Endpoints:
-  - GET /alarms
-  - PUT /alarms/{alarm_id}/acknowledge
-  - GET /notifications
-  - PUT /notifications/{note_id}/read
+Alarm Management Endpoints
+Query alarms and acknowledge incidents with role-based authorization.
 """
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
+from server.app.database import get_db
+from server.app.models import Alarm, User
+from server.app.schemas import AlarmOut, AlarmAckResponse
+from server.app.auth import get_current_user, require_roles
 
-from backend.app.database import get_db
-from backend.app.auth import get_current_user, RoleChecker
-from backend.app.models import User, Alarm, Notification
-from backend.app.schemas import AlarmOut, AlarmAcknowledge, NotificationOut
-from backend.app.services.kpi_engine import log_audit
+router = APIRouter(prefix="/api/alarms", tags=["Alarms"])
 
-router = APIRouter(tags=["Alarms & Notifications"])
+ACK_ALLOWED_ROLES = ["admin", "manager", "engineer", "operator"]
 
-
-# -----------------------------------------------------
-# ALARMS CONSOLE API
-# -----------------------------------------------------
-@router.get("/alarms", response_model=List[AlarmOut])
+@router.get("", response_model=List[AlarmOut])
 def get_alarms(
-    status: Optional[str] = None,
-    severity: Optional[str] = None,
-    db: Session = Depends(get_db)
+    active: Optional[bool] = Query(None, description="Filter for active unresolved alarms"),
+    limit: int = Query(100, ge=1, le=500, description="Max alarms to return"),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
 ):
+    """
+    Returns logged alarms.
+    If active=true, only returns alarms that have not yet been resolved.
+    """
     query = db.query(Alarm)
-    if status:
-        query = query.filter(Alarm.status == status)
-    if severity:
-        query = query.filter(Alarm.severity == severity)
-    return query.order_by(desc(Alarm.time)).all()
+    if active is True:
+        query = query.filter(Alarm.resolved_at.is_(None))
+    elif active is False:
+        query = query.filter(Alarm.resolved_at.is_not(None))
 
+    alarms = query.order_by(desc(Alarm.ts)).limit(limit).all()
+    return alarms
 
-@router.put("/alarms/{alarm_id}/acknowledge")
+@router.post("/{alarm_id}/ack", response_model=AlarmAckResponse)
 def acknowledge_alarm(
     alarm_id: int,
-    payload: AlarmAcknowledge,
-    request: Request,
-    user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(ACK_ALLOWED_ROLES))
 ):
-    RoleChecker(["Admin", "Plant Manager", "Engineer", "Operator"])(user, db)
+    """
+    Acknowledges an alarm incident.
+    Permitted roles: admin, manager, engineer, operator.
+    """
     alarm = db.query(Alarm).filter(Alarm.id == alarm_id).first()
     if not alarm:
-        raise HTTPException(status_code=404, detail="Alarm not found.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Alarm with ID {alarm_id} not found."
+        )
 
-    alarm.status = "ACKNOWLEDGED"
-    alarm.acknowledged_by = payload.acknowledged_by
-    alarm.comments = payload.comments
+    alarm.acknowledged = True
+    alarm.acknowledged_by = current_user.username
     db.commit()
 
-    client_host = request.client.host if request.client else "127.0.0.1"
-    log_audit(db, "ACKNOWLEDGE_ALARM", f"User acknowledged alarm #{alarm_id}: {payload.comments}", user.id, client_host)
-    return {"status": "success", "alarm_id": alarm_id, "state": "ACKNOWLEDGED"}
-
-
-# -----------------------------------------------------
-# NOTIFICATIONS INBOX API
-# -----------------------------------------------------
-@router.get("/notifications", response_model=List[NotificationOut])
-def get_notifications(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    return db.query(Notification).filter(Notification.user_id == user.id).order_by(desc(Notification.created_at)).all()
-
-
-@router.put("/notifications/{note_id}/read")
-def mark_notification_read(note_id: int, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    note = db.query(Notification).filter(Notification.id == note_id, Notification.user_id == user.id).first()
-    if not note:
-        raise HTTPException(status_code=404, detail="Notification not found")
-    note.read = True
-    db.commit()
-    return {"status": "success"}
+    return AlarmAckResponse(
+        success=True,
+        id=alarm.id,
+        acknowledged_by=current_user.username,
+        status="ACKNOWLEDGED"
+    )
