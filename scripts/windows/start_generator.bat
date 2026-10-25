@@ -9,8 +9,8 @@ echo Starting 60-tag industrial furnace data generator...
 echo Writing to MySQL tables: furnace_readings and furnace_latest
 echo.
 
-if exist "..\server\venv\Scripts\python.exe" (
-    "..\server\venv\Scripts\python.exe" generator.py
+if exist "venv\Scripts\python.exe" (
+    "venv\Scripts\python.exe" generator.py
 ) else (
     python generator.py
 )
