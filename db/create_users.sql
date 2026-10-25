@@ -12,8 +12,8 @@ CREATE USER IF NOT EXISTS 'generator_user'@'127.0.0.1' IDENTIFIED BY 'GenPasswor
 GRANT INSERT ON furnace_db.furnace_readings TO 'generator_user'@'localhost';
 GRANT INSERT ON furnace_db.furnace_readings TO 'generator_user'@'127.0.0.1';
 
-GRANT INSERT, UPDATE, DELETE ON furnace_db.furnace_latest TO 'generator_user'@'localhost';
-GRANT INSERT, UPDATE, DELETE ON furnace_db.furnace_latest TO 'generator_user'@'127.0.0.1';
+GRANT SELECT, INSERT, UPDATE, DELETE ON furnace_db.furnace_latest TO 'generator_user'@'localhost';
+GRANT SELECT, INSERT, UPDATE, DELETE ON furnace_db.furnace_latest TO 'generator_user'@'127.0.0.1';
 
 -- 2. Server User: SELECT on readings, SELECT/INSERT/UPDATE on users and alarms
 CREATE USER IF NOT EXISTS 'server_user'@'localhost' IDENTIFIED BY 'ServerPassword123!';
