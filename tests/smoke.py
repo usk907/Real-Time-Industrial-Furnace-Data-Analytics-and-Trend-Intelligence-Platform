@@ -9,7 +9,7 @@ import time
 import requests
 from datetime import datetime
 
-SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8000")
+SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8001")
 ADMIN_USER = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASS = os.getenv("ADMIN_PASSWORD", "Admin@Secure2026!")
 

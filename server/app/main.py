@@ -111,6 +111,18 @@ def health_check(db: Session = Depends(get_db)):
         server_time=datetime.now().isoformat()
     )
 
+# Root endpoint
+@app.get("/", tags=["Root"])
+def root_info():
+    """Service status and quick links."""
+    return {
+        "service": "IEIP Industrial Energy Server",
+        "status": "ONLINE",
+        "api_docs": "/docs",
+        "health": "/api/health",
+        "frontend_dashboard": "http://localhost:5174"
+    }
+
 # Include domain routers
 app.include_router(auth_router)
 app.include_router(live_router)
