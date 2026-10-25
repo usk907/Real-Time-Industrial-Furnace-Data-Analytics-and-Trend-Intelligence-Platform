@@ -2,19 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { LogOut, Bell, User as UserIcon, Check, Server } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ServerSettingsModal } from './ServerSettingsModal';
-import { getApiBaseUrl } from '../config';
-import { NotificationItem } from '../types';
+import { getApiBase } from '../config';
 
 export const Header: React.FC = () => {
-  const { user, logout, token } = useAuth();
-  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const { user, logout, token, connectionStatus, tagList } = useAuth();
+  const [alarms, setAlarms] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isServerModalOpen, setIsServerModalOpen] = useState(false);
-  const [tapStatus, setTapStatus] = useState<{ online: boolean; records: number; latency: number }>({
-    online: true,
-    records: 65000,
-    latency: 24.5
-  });
   const [currentTime, setCurrentTime] = useState(new Date());
 
   useEffect(() => {
@@ -23,63 +17,41 @@ export const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchTapStatus();
-    const tapTimer = setInterval(fetchTapStatus, 5000);
-    return () => clearInterval(tapTimer);
-  }, []);
+    if (!token) return;
+    fetchAlarms();
+    const interval = setInterval(fetchAlarms, 8000);
+    return () => clearInterval(interval);
+  }, [token]);
 
-  const fetchTapStatus = async () => {
+  const fetchAlarms = async () => {
     try {
-      const res = await fetch('/api/tap/status');
+      const res = await fetch('/api/alarms?active=true&limit=10', {
+        headers: { Authorization: `Bearer ${token}` }
+      });
       if (res.ok) {
         const data = await res.json();
-        setTapStatus({
-          online: data.tap_server_online,
-          records: data.total_sql_readings || 0,
-          latency: data.metrics?.last_write_latency_ms || 25.0
-        });
+        setAlarms(data);
       }
     } catch {
       // Fallback
     }
   };
 
-  useEffect(() => {
-    if (!token) return;
-    fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000); // refresh every 10s
-    return () => clearInterval(interval);
-  }, [token]);
-
-  const fetchNotifications = async () => {
+  const acknowledgeAlarm = async (id: number) => {
     try {
-      const res = await fetch('/api/notifications', {
-        headers: { 'Authorization': `Bearer ${token}` }
+      const res = await fetch(`/api/alarms/${id}/ack`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` }
       });
       if (res.ok) {
-        const data = await res.json();
-        setNotifications(data);
+        fetchAlarms();
       }
-    } catch (e) {
-      console.error(e);
+    } catch {
+      // Fallback
     }
   };
 
-  const markAsRead = async (id: number) => {
-    try {
-      const res = await fetch(`/api/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        fetchNotifications();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const unacknowledgedCount = alarms.filter(a => !a.acknowledged).length;
 
   return (
     <header className="h-20 border-b border-[#1F2942]/60 bg-[#0A0D1A]/90 backdrop-blur-md flex items-center justify-between px-8 relative z-10">
@@ -88,7 +60,9 @@ export const Header: React.FC = () => {
           Industrial Energy Intelligence Platform
         </h2>
         <div className="flex items-center gap-3 mt-0.5">
-          <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">Gary Steel Works • Blast Furnace-1 Section</p>
+          <p className="text-[10px] text-cyan-400 font-bold uppercase tracking-widest">
+            Gary Steel Works • Blast Furnace Section
+          </p>
           <span className="text-slate-600 text-[10px]">•</span>
           <span className="text-[10px] text-slate-400 font-mono tracking-wider">
             {currentTime.toLocaleTimeString()} UTC
@@ -107,32 +81,53 @@ export const Header: React.FC = () => {
           <div className="text-left leading-none">
             <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Backend Link</p>
             <p className="text-[11px] font-bold text-cyan-400 font-mono">
-              {getApiBaseUrl() ? getApiBaseUrl().replace(/^https?:\/\//, '') : 'Local:8000'}
+              {getApiBase() ? getApiBase().replace(/^https?:\/\//, '') : '127.0.0.1:8000'}
             </p>
           </div>
         </button>
 
-        {/* TAP INGESTION SERVER LIVE PILL */}
+        {/* WEBSOCKET LIVE STATUS PILL */}
         <div className="hidden lg:flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-[#10162B] border border-[#1F2B50] shadow-inner">
-          <span className={`h-2.5 w-2.5 rounded-full ${tapStatus.online ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50' : 'bg-amber-400'}`} />
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${
+              connectionStatus === 'Connected'
+                ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50'
+                : connectionStatus === 'Connecting'
+                ? 'bg-amber-400 animate-pulse shadow-lg shadow-amber-500/50'
+                : 'bg-rose-500 shadow-lg shadow-rose-500/50'
+            }`}
+          />
           <div className="text-left leading-none">
-            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">TAP Ingest Server (:8001)</p>
-            <p className="text-[11px] font-bold text-emerald-400 font-mono">
-              {tapStatus.online ? `${tapStatus.records.toLocaleString()} rows • ${tapStatus.latency}ms` : 'Direct Fallback'}
+            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Live Stream (WS)</p>
+            <p
+              className={`text-[11px] font-bold font-mono ${
+                connectionStatus === 'Connected'
+                  ? 'text-emerald-400'
+                  : connectionStatus === 'Connecting'
+                  ? 'text-amber-400'
+                  : 'text-rose-400'
+              }`}
+            >
+              {connectionStatus === 'Connected'
+                ? `${tagList.length || 60} Tags Active`
+                : connectionStatus === 'Connecting'
+                ? 'Reconnecting...'
+                : 'Offline'}
             </p>
           </div>
         </div>
 
-        {/* NOTIFICATIONS PANEL */}
+        {/* ALARMS NOTIFICATION BELL */}
         <div className="relative">
-          <button 
+          <button
             onClick={() => setIsOpen(!isOpen)}
             className="p-2.5 rounded-xl bg-[#131930] hover:bg-[#1E2749] border border-[#1F2942]/50 text-slate-300 relative transition-all"
+            title="Active Alarms"
           >
             <Bell className="h-5 w-5" />
-            {unreadCount > 0 && (
+            {unacknowledgedCount > 0 && (
               <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-600 rounded-full text-[10px] font-bold text-white flex items-center justify-center animate-bounce">
-                {unreadCount}
+                {unacknowledgedCount}
               </span>
             )}
           </button>
@@ -140,26 +135,47 @@ export const Header: React.FC = () => {
           {isOpen && (
             <div className="absolute right-0 mt-3 w-80 bg-[#101529] border border-[#1F2942] rounded-2xl shadow-2xl overflow-hidden z-30">
               <div className="p-4 border-b border-[#1F2942]/80 bg-[#151C36] flex justify-between items-center">
-                <span className="font-bold text-xs text-white uppercase tracking-wider">Alerts & System Notices</span>
-                <span className="text-[9px] bg-red-600 text-white font-bold px-2 py-0.5 rounded-full">{unreadCount} New</span>
+                <span className="font-bold text-xs text-white uppercase tracking-wider">Active Alarms</span>
+                <span className="text-[9px] bg-red-600 text-white font-bold px-2 py-0.5 rounded-full">
+                  {unacknowledgedCount} Unacked
+                </span>
               </div>
               <div className="max-h-60 overflow-y-auto divide-y divide-[#1F2942]/40 text-xs">
-                {notifications.length === 0 ? (
-                  <p className="text-slate-500 text-center py-8">No recent alerts recorded.</p>
+                {alarms.length === 0 ? (
+                  <p className="text-slate-500 text-center py-8">No active alarms recorded.</p>
                 ) : (
-                  notifications.map(n => (
-                    <div key={n.id} className={`p-3.5 hover:bg-[#151C36]/50 flex justify-between items-start gap-2.5 ${!n.read ? 'bg-[#151C36]/20' : ''}`}>
+                  alarms.map(a => (
+                    <div
+                      key={a.id}
+                      className={`p-3.5 hover:bg-[#151C36]/50 flex justify-between items-start gap-2.5 ${
+                        !a.acknowledged ? 'bg-[#151C36]/30' : ''
+                      }`}
+                    >
                       <div className="flex-1">
-                        <p className={`font-semibold ${n.type === 'ALARM' ? 'text-red-400' : 'text-slate-300'}`}>{n.message}</p>
-                        <p className="text-[9px] text-slate-500 mt-1 font-mono">{new Date(n.created_at).toLocaleTimeString()}</p>
+                        <div className="flex items-center gap-1.5">
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
+                              a.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
+                            }`}
+                          >
+                            {a.severity}
+                          </span>
+                          <span className="font-semibold text-slate-200">{a.tag}</span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1 font-mono">
+                          Value: {a.value} • Limit: {a.threshold}
+                        </p>
+                        <p className="text-[9px] text-slate-500 mt-0.5 font-mono">
+                          {new Date(a.ts).toLocaleTimeString()}
+                        </p>
                       </div>
-                      {!n.read && (
-                        <button 
-                          onClick={() => markAsRead(n.id)}
+                      {!a.acknowledged && (
+                        <button
+                          onClick={() => acknowledgeAlarm(a.id)}
                           className="p-1 rounded bg-[#20294A] hover:bg-[#2F3D6C] text-emerald-400"
-                          title="Mark as read"
+                          title="Acknowledge alarm"
                         >
-                          <Check className="h-3 w-3" />
+                          <Check className="h-4 w-4" />
                         </button>
                       )}
                     </div>
@@ -170,33 +186,29 @@ export const Header: React.FC = () => {
           )}
         </div>
 
-        {/* USER PROFILE INFO */}
-        <div className="flex items-center gap-4 border-l border-[#1F2942]/50 pl-6">
-          <div className="text-right">
-            <p className="text-xs font-bold text-slate-200">{user?.username}</p>
-            <span className="text-[9px] bg-cyan-600/10 border border-cyan-500/20 text-cyan-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
-              {user?.role}
-            </span>
+        {/* USER PROFILE & LOGOUT */}
+        <div className="flex items-center gap-3 pl-2 border-l border-[#1F2942]/50">
+          <div className="flex items-center gap-2">
+            <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-cyan-600 to-blue-600 flex items-center justify-center text-white font-bold text-xs shadow-md">
+              {user ? user.username.slice(0, 2).toUpperCase() : <UserIcon className="h-4 w-4" />}
+            </div>
+            <div className="hidden md:block text-left">
+              <span className="block text-xs font-bold text-slate-200">{user?.username || 'Operator'}</span>
+              <span className="block text-[10px] text-cyan-400 capitalize font-medium">{user?.role || 'Viewer'}</span>
+            </div>
           </div>
 
-          <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-500 flex items-center justify-center shadow-lg shadow-blue-500/20 text-white font-bold">
-            <UserIcon className="h-5 w-5" />
-          </div>
-
-          <button 
+          <button
             onClick={logout}
-            className="p-2.5 rounded-xl bg-[#131930] hover:bg-red-950/20 hover:border-red-900/30 hover:text-red-400 border border-[#1F2942]/50 text-slate-400 transition-all duration-200"
+            className="p-2 rounded-xl bg-[#131930] hover:bg-[#1E2749] border border-[#1F2942]/50 text-slate-400 hover:text-red-400 transition-all"
             title="Sign Out"
           >
-            <LogOut className="h-5 w-5" />
+            <LogOut className="h-4 w-4" />
           </button>
         </div>
       </div>
 
-      <ServerSettingsModal 
-        isOpen={isServerModalOpen} 
-        onClose={() => setIsServerModalOpen(false)} 
-      />
+      <ServerSettingsModal isOpen={isServerModalOpen} onClose={() => setIsServerModalOpen(false)} />
     </header>
   );
 };

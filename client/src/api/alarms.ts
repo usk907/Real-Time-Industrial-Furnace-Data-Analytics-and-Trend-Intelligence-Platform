@@ -1,42 +1,31 @@
-import { api } from './client';
+/**
+ * Alarms API Client
+ * Query active/cleared alarms and acknowledge incidents.
+ */
+import { apiFetch } from './client';
 
-export interface AlarmItem {
+export interface ServerAlarm {
   id: number;
-  time: string;
-  end_time?: string | null;
-  sensor_id: number;
-  alarm_type: string;
-  severity: string;
-  trigger_value: number;
-  status: string;
-  comments?: string | null;
+  ts: string;
+  tag: string;
+  value: number;
+  threshold: number;
+  severity: 'CRITICAL' | 'WARNING';
+  acknowledged: boolean;
   acknowledged_by?: string | null;
+  resolved_at?: string | null;
 }
 
-export interface NotificationItem {
-  id: number;
-  message: string;
-  type: string;
-  read: boolean;
-  created_at: string;
+export async function getAlarms(active?: boolean, limit: number = 100): Promise<ServerAlarm[]> {
+  const params = new URLSearchParams({ limit: limit.toString() });
+  if (active !== undefined) {
+    params.append('active', active ? 'true' : 'false');
+  }
+  return apiFetch<ServerAlarm[]>(`/api/alarms?${params.toString()}`);
 }
 
-export function getAlarms(status?: string, severity?: string) {
-  const params = new URLSearchParams();
-  if (status) params.append('status', status);
-  if (severity) params.append('severity', severity);
-  const q = params.toString();
-  return api.get<AlarmItem[]>(`/api/alarms${q ? `?${q}` : ''}`);
-}
-
-export function acknowledgeAlarm(alarmId: number, comments: string, acknowledgedBy: string) {
-  return api.put(`/api/alarms/${alarmId}/acknowledge`, { comments, acknowledged_by: acknowledgedBy });
-}
-
-export function getNotifications() {
-  return api.get<NotificationItem[]>('/api/notifications');
-}
-
-export function markNotificationRead(noteId: number) {
-  return api.put(`/api/notifications/${noteId}/read`);
+export async function acknowledgeAlarm(alarmId: number): Promise<{ success: boolean; id: number; acknowledged_by: string; status: string }> {
+  return apiFetch(`/api/alarms/${alarmId}/ack`, {
+    method: 'POST'
+  });
 }

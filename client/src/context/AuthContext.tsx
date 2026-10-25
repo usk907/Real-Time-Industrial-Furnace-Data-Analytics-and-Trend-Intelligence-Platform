@@ -1,44 +1,31 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { getWsBaseUrl } from '../config';
-import { User, TelemetryReading, LiveBuffer } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { getWsUrl } from '../config';
+import { User, TelemetryReading, LiveBuffer, TagLiveItem } from '../types';
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   login: (username: string, password: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  connectionStatus: 'Connected' | 'Disconnected';
-  liveReadings: Record<number, TelemetryReading>;
+  connectionStatus: 'Connected' | 'Connecting' | 'Disconnected';
+  liveTags: Record<string, TagLiveItem>;
+  tagList: TagLiveItem[];
+  liveReadings: Record<string, TelemetryReading>;
   liveBuffer: LiveBuffer;
   authError: string | null;
 }
 
-const DEFAULT_ADMIN_USER: User = {
-  id: 1,
-  username: 'admin',
-  email: 'admin@ieip-platform.com',
-  role: 'Admin',
-  permissions: ['read_all', 'write_all', 'manage_users', 'acknowledge_alarms', 'manage_settings']
-};
-
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-const DEFAULT_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhZG1pbiIsInJvbGUiOiJBZG1pbiIsImV4cCI6MTc5MDE3MjcxM30.wyTOGPz7-la7tcasQBUonkxB3Cd2baXPVjxEe_6hLXA';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [token, setToken] = useState<string | null>(() => {
-    const existing = localStorage.getItem('token');
-    if (!existing || existing === 'admin-session-active') {
-      localStorage.setItem('token', DEFAULT_TOKEN);
-      return DEFAULT_TOKEN;
-    }
-    return existing;
+    return localStorage.getItem('token');
   });
-  const [user, setUser] = useState<User | null>(() => {
-    return DEFAULT_ADMIN_USER;
-  });
-  const [connectionStatus, setConnectionStatus] = useState<'Connected' | 'Disconnected'>('Connected');
-  const [liveReadings, setLiveReadings] = useState<Record<number, TelemetryReading>>({});
+  const [user, setUser] = useState<User | null>(null);
+  const [connectionStatus, setConnectionStatus] = useState<'Connected' | 'Connecting' | 'Disconnected'>('Disconnected');
+  const [liveTags, setLiveTags] = useState<Record<string, TagLiveItem>>({});
+  const [tagList, setTagList] = useState<TagLiveItem[]>([]);
+  const [liveReadings, setLiveReadings] = useState<Record<string, TelemetryReading>>({});
   const [liveBuffer, setLiveBuffer] = useState<LiveBuffer>({
     time: [],
     importPower: [],
@@ -46,96 +33,190 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [authError, setAuthError] = useState<string | null>(null);
 
+  const backoffRef = useRef(1000);
+  const wsRef = useRef<WebSocket | null>(null);
+  const reconnectTimerRef = useRef<any>(null);
+
   // Attempt to load profile on mount if token exists
   useEffect(() => {
     if (token) {
       fetchProfile(token);
+      fetchInitialLiveTelemetry(token);
     }
   }, [token]);
-
-  // Handle WebSocket Connection globally when token is set and user is logged in
-  useEffect(() => {
-    if (!token || !user) {
-      setConnectionStatus('Disconnected');
-      return;
-    }
-
-    const wsUrl = getWsBaseUrl();
-
-    let ws: WebSocket;
-    let reconnectTimeout: any;
-
-    const connect = () => {
-      console.log(`[WS]: Connecting global telemetry stream to ${wsUrl}...`);
-      try {
-        ws = new WebSocket(wsUrl);
-      } catch (err) {
-        console.warn("[WS]: Direct connect failed, retrying in 3s...", err);
-        reconnectTimeout = setTimeout(connect, 3000);
-        return;
-      }
-
-      ws.onopen = () => {
-        setConnectionStatus('Connected');
-      };
-
-      ws.onmessage = (event) => {
-        try {
-          const payload = JSON.parse(event.data);
-          if (payload.event === "TELEMETRY_UPDATE") {
-            const readings = payload.readings;
-            setLiveReadings(readings);
-
-            // Fetch breaker values (1 and 2) and TG values (41 and 42)
-            const importPower = (readings["1"]?.value || 0) + (readings["2"]?.value || 0);
-            const generationPower = (readings["41"]?.value || 0) + (readings["42"]?.value || 0);
-            const timeLabel = new Date(payload.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-
-            setLiveBuffer(prev => {
-              const nextTime = [...prev.time, timeLabel].slice(-30);
-              const nextImport = [...prev.importPower, importPower].slice(-30);
-              const nextGen = [...prev.generationPower, generationPower].slice(-30);
-              return { time: nextTime, importPower: nextImport, generationPower: nextGen };
-            });
-          }
-        } catch (err) {
-          console.error("[WS]: Payload error", err);
-        }
-      };
-
-      ws.onclose = () => {
-        setConnectionStatus('Disconnected');
-        reconnectTimeout = setTimeout(connect, 3000);
-      };
-
-      ws.onerror = (err) => {
-        console.error("[WS]: Socket error", err);
-        ws.close();
-      };
-    };
-
-    connect();
-
-    return () => {
-      if (ws) ws.close();
-      clearTimeout(reconnectTimeout);
-    };
-  }, [token, user]);
 
   const fetchProfile = async (authToken: string) => {
     try {
       const response = await fetch('/api/auth/me', {
-        headers: { 'Authorization': `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` }
       });
       if (response.ok) {
         const data = await response.json();
-        setUser(data);
+        setUser({
+          id: data.id || 1,
+          username: data.username,
+          email: `${data.username}@ieip-platform.com`,
+          role: data.role,
+          permissions: []
+        });
         setAuthError(null);
+      } else {
+        // Token invalid or expired
+        localStorage.removeItem('token');
+        setToken(null);
+        setUser(null);
       }
-    } catch (err) {
-      console.warn("Using active admin profile fallback");
+    } catch {
+      // Fallback
     }
   };
+
+  const fetchInitialLiveTelemetry = async (authToken: string) => {
+    try {
+      const res = await fetch('/api/live', {
+        headers: { Authorization: `Bearer ${authToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.tags && Array.isArray(data.tags)) {
+          processIncomingTags(data.tags, data.ts);
+        }
+      }
+    } catch {
+      // Ignore initial poll error
+    }
+  };
+
+  const processIncomingTags = (tags: TagLiveItem[], ts: string) => {
+    const tagMap: Record<string, TagLiveItem> = {};
+    const legacyReadings: Record<string, TelemetryReading> = {};
+
+    let importKw = 0;
+    let genKw = 0;
+
+    tags.forEach(t => {
+      tagMap[t.tag] = t;
+      legacyReadings[t.tag] = {
+        name: t.tag,
+        value: t.value,
+        unit: t.unit,
+        status: t.status,
+        quality: 'GOOD'
+      };
+
+      if (t.tag.includes('Power') || t.tag.includes('Active_Power')) {
+        if (t.tag.startsWith('EAF1') || t.tag.startsWith('TR1') || t.tag.startsWith('TR2')) {
+          importKw += t.value;
+        } else {
+          genKw += t.value;
+        }
+      }
+    });
+
+    setLiveTags(tagMap);
+    setTagList(tags);
+    setLiveReadings(legacyReadings);
+
+    const timeLabel = new Date(ts).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    });
+
+    setLiveBuffer(prev => {
+      const nextTime = [...prev.time, timeLabel].slice(-30);
+      const nextImport = [...prev.importPower, Math.round(importKw)].slice(-30);
+      const nextGen = [...prev.generationPower, Math.round(genKw)].slice(-30);
+      return { time: nextTime, importPower: nextImport, generationPower: nextGen };
+    });
+  };
+
+  // WebSocket Connection with Exponential Backoff
+  useEffect(() => {
+    if (!token) {
+      setConnectionStatus('Disconnected');
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+      return;
+    }
+
+    let isMounted = true;
+
+    const connectWebSocket = () => {
+      if (!isMounted || !token) return;
+
+      const wsUrl = getWsUrl(token);
+      setConnectionStatus('Connecting');
+
+      try {
+        const ws = new WebSocket(wsUrl);
+        wsRef.current = ws;
+
+        ws.onopen = () => {
+          if (!isMounted) return;
+          setConnectionStatus('Connected');
+          backoffRef.current = 1000; // Reset backoff on successful connection
+        };
+
+        ws.onmessage = event => {
+          if (!isMounted) return;
+          try {
+            const data = JSON.parse(event.data);
+            if (data.tags && Array.isArray(data.tags)) {
+              processIncomingTags(data.tags, data.ts || new Date().toISOString());
+            }
+          } catch (e) {
+            console.error('[WS]: Parse error', e);
+          }
+        };
+
+        ws.onclose = event => {
+          if (!isMounted) return;
+          setConnectionStatus('Disconnected');
+          wsRef.current = null;
+
+          // If closed with auth failure (4401), don't aggressively reconnect
+          if (event.code === 4401) {
+            console.warn('[WS]: Authentication rejected (4401). Clearing token.');
+            localStorage.removeItem('token');
+            setToken(null);
+            setUser(null);
+            return;
+          }
+
+          // Exponential backoff reconnect
+          const delay = backoffRef.current;
+          backoffRef.current = Math.min(backoffRef.current * 1.5, 10000);
+          console.log(`[WS]: Disconnected. Reconnecting in ${Math.round(delay)}ms...`);
+          reconnectTimerRef.current = setTimeout(connectWebSocket, delay);
+        };
+
+        ws.onerror = () => {
+          if (ws.readyState === WebSocket.OPEN || ws.readyState === WebSocket.CONNECTING) {
+            ws.close();
+          }
+        };
+      } catch (err) {
+        setConnectionStatus('Disconnected');
+        const delay = backoffRef.current;
+        backoffRef.current = Math.min(backoffRef.current * 1.5, 10000);
+        reconnectTimerRef.current = setTimeout(connectWebSocket, delay);
+      }
+    };
+
+    connectWebSocket();
+
+    return () => {
+      isMounted = false;
+      if (reconnectTimerRef.current) clearTimeout(reconnectTimerRef.current);
+      if (wsRef.current) {
+        wsRef.current.close();
+        wsRef.current = null;
+      }
+    };
+  }, [token]);
 
   const login = async (username: string, password: string): Promise<boolean> => {
     setAuthError(null);
@@ -150,45 +231,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         localStorage.setItem('token', data.access_token);
         setToken(data.access_token);
         setUser({
-          id: 0, // Mock id, fetchProfile will reload actual
-          username,
-          email: "",
+          id: 1,
+          username: data.username,
+          email: `${data.username}@ieip-platform.com`,
           role: data.role,
-          permissions: data.permissions
+          permissions: []
         });
         await fetchProfile(data.access_token);
+        await fetchInitialLiveTelemetry(data.access_token);
         return true;
       } else {
         const errData = await response.json();
-        setAuthError(errData.detail || "Authentication failed");
+        setAuthError(errData.detail || 'Authentication failed');
         return false;
       }
-    } catch (err) {
-      setAuthError("Server unreachable. Please check connection.");
+    } catch {
+      setAuthError('Server unreachable. Please check connection.');
       return false;
     }
   };
 
   const logout = async () => {
-    if (token) {
-      try {
-        await fetch('/api/auth/logout', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-      } catch (e) {
-        // Continue logout even if API call fails
-      }
-    }
     localStorage.removeItem('token');
     setToken(null);
     setUser(null);
+    setLiveTags({});
+    setTagList([]);
     setLiveReadings({});
     setLiveBuffer({ time: [], importPower: [], generationPower: [] });
+    setConnectionStatus('Disconnected');
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, login, logout, connectionStatus, liveReadings, liveBuffer, authError }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        token,
+        login,
+        logout,
+        connectionStatus,
+        liveTags,
+        tagList,
+        liveReadings,
+        liveBuffer,
+        authError
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -196,6 +284,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used inside AuthProvider");
+  if (!context) throw new Error('useAuth must be used inside AuthProvider');
   return context;
 };

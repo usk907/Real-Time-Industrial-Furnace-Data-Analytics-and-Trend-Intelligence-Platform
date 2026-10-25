@@ -1,61 +1,63 @@
-// Configuration of API Base URL and Network Routing for Local, Cloud, and Mobile APK
-export function getApiBaseUrl(): string {
-  if (typeof window === 'undefined') return '';
+/**
+ * Industrial Energy Intelligence Platform (IEIP)
+ * Central Client Network Configuration Module (Part 3)
+ */
 
-  const saved = localStorage.getItem('IEIP_API_URL');
-  if (saved && saved.trim()) {
-    return saved.trim().replace(/\/+$/, '');
+export function getApiBase(): string {
+  if (typeof window !== 'undefined') {
+    const saved = localStorage.getItem('api_base') || localStorage.getItem('IEIP_API_URL');
+    if (saved && saved.trim()) {
+      return saved.trim().replace(/\/+$/, '');
+    }
   }
 
-  // Support VITE_API_URL if defined in environment
-  const envUrl = (import.meta as any).env?.VITE_API_URL;
-  if (envUrl && typeof envUrl === 'string' && envUrl.trim()) {
-    return envUrl.trim().replace(/\/+$/, '');
+  const envBase = (import.meta as any).env?.VITE_API_BASE || (import.meta as any).env?.VITE_API_URL;
+  if (envBase && typeof envBase === 'string' && envBase.trim()) {
+    return envBase.trim().replace(/\/+$/, '');
   }
 
   // Check if running inside Android / Capacitor native app
   const isCapacitor = Boolean(
-    (window as any).Capacitor?.isNativePlatform?.() ||
-    window.location.protocol === 'capacitor:' ||
-    window.location.protocol === 'ionic:'
+    typeof window !== 'undefined' &&
+    ((window as any).Capacitor?.isNativePlatform?.() ||
+      window.location.protocol === 'capacitor:' ||
+      window.location.protocol === 'ionic:')
   );
 
-  // If inside Capacitor APK with no custom URL set, default to Android Emulator loopback or standard LAN fallback
   if (isCapacitor) {
     return 'http://10.0.2.2:8000';
   }
 
-  // Running in web browser: empty string uses relative path (proxied by Vite or Nginx)
-  return '';
+  return 'http://localhost:8000';
 }
 
-export function setApiBaseUrl(url: string) {
+export function setApiBase(url: string) {
   if (typeof window === 'undefined') return;
-  if (!url || !url.trim()) {
+  const clean = url.trim().replace(/\/+$/, '');
+  if (!clean) {
+    localStorage.removeItem('api_base');
     localStorage.removeItem('IEIP_API_URL');
   } else {
-    localStorage.setItem('IEIP_API_URL', url.trim().replace(/\/+$/, ''));
+    localStorage.setItem('api_base', clean);
+    localStorage.setItem('IEIP_API_URL', clean);
   }
 }
 
-export function getWsBaseUrl(): string {
-  if (typeof window === 'undefined') return 'ws://127.0.0.1:8000/api/ws';
-
-  const apiBase = getApiBaseUrl();
-  if (apiBase) {
-    try {
-      const parsed = new URL(apiBase);
-      const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
-      return `${wsProto}//${parsed.host}/api/ws`;
-    } catch {
-      // Fallback if URL parsing fails
-    }
+export function getWsUrl(token?: string): string {
+  const apiBase = getApiBase();
+  let baseWs = 'ws://localhost:8000/api/ws';
+  try {
+    const parsed = new URL(apiBase);
+    const wsProto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+    baseWs = `${wsProto}//${parsed.host}/api/ws`;
+  } catch {
+    baseWs = apiBase.replace(/^http/, 'ws') + '/api/ws';
   }
 
-  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-  const isDev = window.location.port && window.location.port !== '80' && window.location.port !== '443';
-  const host = isDev ? `${window.location.hostname || '127.0.0.1'}:8000` : window.location.host;
-  return `${protocol}://${host}/api/ws`;
+  if (token) {
+    return `${baseWs}?token=${encodeURIComponent(token)}`;
+  }
+  return baseWs;
 }
 
 export function getDeviceType(): 'web' | 'app' {
@@ -72,18 +74,23 @@ export function getDeviceType(): 'web' | 'app' {
   return 'web';
 }
 
-// Transparent fetch interceptor for relative /api routes
+export const API_BASE = getApiBase();
+export const WS_URL = getWsUrl();
+
+// Transparent fetch interceptor so relative /api routes are routed to API_BASE
 if (typeof window !== 'undefined') {
   const originalFetch = window.fetch;
   window.fetch = function (input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
     if (typeof input === 'string' && input.startsWith('/api')) {
-      const baseUrl = getApiBaseUrl();
-      if (baseUrl) {
-        input = `${baseUrl}${input}`;
-      }
+      const base = getApiBase();
+      input = `${base}${input}`;
     }
     return originalFetch.call(this, input, init);
   };
 }
 
-export const API_BASE_URL = getApiBaseUrl();
+// Backward-compatible alias helpers
+export const getApiBaseUrl = getApiBase;
+export const setApiBaseUrl = setApiBase;
+export const getWsBaseUrl = getWsUrl;
+export const API_BASE_URL = API_BASE;

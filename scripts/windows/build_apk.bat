@@ -7,7 +7,7 @@ echo.
 
 :: Resolve project root directory (two levels up from scripts\windows)
 set "REPO_ROOT=%~dp0..\.."
-cd /d "%REPO_ROOT%\frontend"
+cd /d "%REPO_ROOT%\client"
 
 :: 1. Ensure production web assets are built
 echo [1/4] Compiling optimized React web application...

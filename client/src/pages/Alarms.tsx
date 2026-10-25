@@ -1,214 +1,184 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Filter } from 'lucide-react';
-
-interface AlarmItem {
-  id: number;
-  time: string;
-  end_time?: string;
-  sensor_id: number;
-  alarm_type: string;
-  severity: string;
-  trigger_value: number;
-  status: string;
-  acknowledged_by?: string;
-  comments?: string;
-}
+import { CheckCircle2, RefreshCw, ShieldAlert } from 'lucide-react';
+import { ServerAlarm, getAlarms, acknowledgeAlarm } from '../api/alarms';
 
 export const Alarms: React.FC = () => {
   const { token, user } = useAuth();
-  const [alarms, setAlarms] = useState<AlarmItem[]>([]);
-  const [filterSeverity, setFilterSeverity] = useState<string>('ALL');
-  const [filterStatus, setFilterStatus] = useState<string>('ALL');
-  const [ackComment, setAckComment] = useState<string>('');
-  const [selectedAlarmId, setSelectedAlarmId] = useState<number | null>(null);
+  const [alarms, setAlarms] = useState<ServerAlarm[]>([]);
+  const [filterActive, setFilterActive] = useState<string>('ACTIVE_ONLY');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [ackLoading, setAckLoading] = useState<number | null>(null);
+
+  const fetchAlarmData = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const activeParam = filterActive === 'ACTIVE_ONLY' ? true : filterActive === 'RESOLVED_ONLY' ? false : undefined;
+      const data = await getAlarms(activeParam, 100);
+      setAlarms(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    fetchAlarms();
-    const interval = setInterval(fetchAlarms, 3000);
+    fetchAlarmData();
+    const interval = setInterval(fetchAlarmData, 4000);
     return () => clearInterval(interval);
-  }, [token, filterSeverity, filterStatus]);
+  }, [filterActive, token]);
 
-  const fetchAlarms = async () => {
+  const handleAck = async (id: number) => {
+    setAckLoading(id);
     try {
-      let query = '';
-      if (filterSeverity !== 'ALL') query += `severity=${filterSeverity}&`;
-      if (filterStatus !== 'ALL') query += `status=${filterStatus}&`;
-      
-      const res = await fetch(`/api/alarms?${query}`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAlarms(data);
-      }
+      await acknowledgeAlarm(id);
+      await fetchAlarmData();
     } catch (e) {
       console.error(e);
+    } finally {
+      setAckLoading(null);
     }
   };
 
-  const handleAcknowledge = async (id: number) => {
-    if (!ackComment) return;
-    try {
-      const res = await fetch(`/api/alarms/${id}/acknowledge`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          acknowledged_by: user?.username || 'engineer_default',
-          comments: ackComment
-        })
-      });
-      if (res.ok) {
-        setAckComment('');
-        setSelectedAlarmId(null);
-        fetchAlarms();
-      }
-    } catch (e) {
-      console.error(e);
-    }
-  };
+  const isAckPermitted = user && ['admin', 'manager', 'engineer', 'operator'].includes(user.role.toLowerCase());
 
   return (
-    <div className="space-y-6 animate-fade-in text-xs font-semibold">
-      
-      {/* Filters Toolbar */}
-      <div className="bg-[#0F1424]/90 border border-[#1F2942]/60 rounded-2xl p-5 backdrop-blur flex flex-wrap gap-4 items-center">
-        <div className="flex items-center gap-2 text-slate-400">
-          <Filter className="h-4.5 w-4.5" />
-          <span>Filters:</span>
-        </div>
-        
+    <div className="space-y-6 animate-fade-in text-slate-200">
+      {/* Header and Filter */}
+      <div className="bg-[#0C1021] border border-[#1F2B50] rounded-2xl p-5 shadow-xl flex flex-wrap gap-4 items-center justify-between">
         <div>
-          <label className="block text-slate-500 mb-1.5 uppercase text-[9px] tracking-wider">Severity</label>
-          <select 
-            value={filterSeverity}
-            onChange={(e) => setFilterSeverity(e.target.value)}
-            className="bg-[#0D1227] border border-[#1F2942]/60 rounded-lg p-2 text-slate-300 focus:outline-none"
-          >
-            <option value="ALL">All Severities</option>
-            <option value="CRITICAL">Critical Alerts</option>
-            <option value="WARNING">Warnings</option>
-            <option value="INFO">Info Logs</option>
-          </select>
+          <h2 className="text-base font-extrabold uppercase tracking-wider text-white flex items-center gap-2">
+            <ShieldAlert className="h-5 w-5 text-red-500" />
+            <span>Industrial Alarm Management</span>
+          </h2>
+          <p className="text-xs text-slate-400 mt-1">
+            Real-Time Threshold Supervision & Incident Lifecycle Tracking
+          </p>
         </div>
 
-        <div>
-          <label className="block text-slate-500 mb-1.5 uppercase text-[9px] tracking-wider">Operational Status</label>
-          <select 
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            className="bg-[#0D1227] border border-[#1F2942]/60 rounded-lg p-2 text-slate-300 focus:outline-none"
+        <div className="flex items-center gap-3">
+          <div className="flex rounded-xl bg-[#10162B] border border-[#1F2B50] p-0.5">
+            {[
+              { id: 'ACTIVE_ONLY', label: 'Active Incidents' },
+              { id: 'ALL', label: 'All Logs' },
+              { id: 'RESOLVED_ONLY', label: 'Resolved' }
+            ].map(tab => (
+              <button
+                key={tab.id}
+                onClick={() => setFilterActive(tab.id)}
+                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all ${
+                  filterActive === tab.id
+                    ? 'bg-cyan-500 text-slate-950 shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={fetchAlarmData}
+            disabled={loading}
+            className="p-2 rounded-xl bg-[#10162B] hover:bg-[#161F3D] border border-[#1F2B50] text-cyan-400"
+            title="Refresh Alarms"
           >
-            <option value="ALL">All States</option>
-            <option value="ACTIVE">ACTIVE</option>
-            <option value="ACKNOWLEDGED">ACKNOWLEDGED</option>
-            <option value="CLEARED">CLEARED</option>
-          </select>
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
       </div>
 
-      {/* Main Alarms Grid */}
-      <div className="bg-[#0F1424]/90 border border-[#1F2942]/60 rounded-2xl overflow-hidden shadow-2xl backdrop-blur">
-        <div className="p-5 border-b border-[#1F2942]/80 bg-[#151C36]/50">
-          <h4 className="text-xs font-bold text-slate-300 uppercase tracking-widest">Alarms logs database</h4>
-        </div>
-        
+      {/* Alarm Table */}
+      <div className="bg-[#0C1021] border border-[#1F2B50] rounded-2xl shadow-xl overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-[#0A0E1A] text-[#556994] font-bold uppercase tracking-wider border-b border-[#1F2942]/50 text-[10px]">
-                <th className="p-4 pl-6">ID</th>
-                <th className="p-4">Time Triggered</th>
-                <th className="p-4">Anomaly Event</th>
-                <th className="p-4">Severity</th>
-                <th className="p-4">Trigger Value</th>
-                <th className="p-4">Operational Status</th>
-                <th className="p-4">Assigned Inspector</th>
-                <th className="p-4 pr-6 text-right">Actions</th>
+          <table className="w-full text-left text-xs">
+            <thead className="bg-[#10162B] border-b border-[#1F2B50] text-slate-400 font-bold uppercase tracking-wider">
+              <tr>
+                <th className="py-3 px-4">Severity</th>
+                <th className="py-3 px-4">Timestamp</th>
+                <th className="py-3 px-4">Tag Channel</th>
+                <th className="py-3 px-4">Trigger Value</th>
+                <th className="py-3 px-4">Threshold</th>
+                <th className="py-3 px-4">Status</th>
+                <th className="py-3 px-4">Resolution</th>
+                <th className="py-3 px-4 text-right">Action</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1F2942]/40 font-medium">
+            <tbody className="divide-y divide-[#1F2B50]/60 font-mono">
               {alarms.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="p-8 text-center text-slate-500">
-                    No matching alarms recorded in current log window.
+                  <td colSpan={8} className="py-12 text-center text-slate-500 font-sans">
+                    No alarm incidents found for the selected view.
                   </td>
                 </tr>
               ) : (
-                alarms.map(a => (
-                  <tr key={a.id} className="hover:bg-[#151C36]/20 transition">
-                    <td className="p-4 pl-6 font-mono text-[#556994]">#{a.id}</td>
-                    <td className="p-4 text-slate-400 font-mono">
-                      {new Date(a.time).toLocaleString()}
-                    </td>
-                    <td className="p-4 font-bold text-slate-200">{a.alarm_type}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                        a.severity === 'CRITICAL' 
-                          ? 'bg-red-950/30 text-red-400 border border-red-900/40' 
-                          : 'bg-amber-950/30 text-amber-400 border border-amber-900/40'
-                      }`}>
-                        {a.severity}
-                      </span>
-                    </td>
-                    <td className="p-4 font-mono font-bold text-cyan-400">
-                      {a.trigger_value ? Math.round(a.trigger_value).toLocaleString() : '-'}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                        a.status === 'ACTIVE' 
-                          ? 'bg-red-950/20 text-red-400 animate-pulse' 
-                          : (a.status === 'ACKNOWLEDGED' ? 'bg-blue-950/20 text-blue-400' : 'bg-emerald-950/20 text-emerald-400')
-                      }`}>
-                        {a.status}
-                      </span>
-                    </td>
-                    <td className="p-4 text-slate-400">
-                      {a.acknowledged_by || (a.status === 'ACTIVE' ? 'Shift Engineer Contact' : '-')}
-                    </td>
-                    <td className="p-4 pr-6 text-right">
-                      {a.status === 'ACTIVE' ? (
-                        <div>
-                          {selectedAlarmId === a.id ? (
-                            <div className="flex items-center gap-1.5 justify-end">
-                              <input 
-                                type="text"
-                                placeholder="Log check remarks"
-                                value={ackComment}
-                                onChange={(e) => setAckComment(e.target.value)}
-                                className="bg-[#0D1227] border border-[#1F2942] rounded px-2.5 py-1 text-slate-200 focus:outline-none"
-                              />
-                              <button 
-                                onClick={() => handleAcknowledge(a.id)}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1 rounded"
-                              >
-                                Submit
-                              </button>
-                            </div>
-                          ) : (
-                            <button 
-                              onClick={() => setSelectedAlarmId(a.id)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-lg font-bold"
-                            >
-                              ACK
-                            </button>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-slate-500 font-bold italic">{a.comments || 'Checked'}</span>
-                      )}
-                    </td>
-                  </tr>
-                ))
+                alarms.map(alarm => {
+                  const isResolved = Boolean(alarm.resolved_at);
+                  const isCritical = alarm.severity === 'CRITICAL';
+
+                  return (
+                    <tr key={alarm.id} className="hover:bg-[#10162B]/50 transition-colors">
+                      <td className="py-3 px-4 font-sans font-bold">
+                        <span
+                          className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
+                            isCritical ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                          }`}
+                        >
+                          {alarm.severity}
+                        </span>
+                      </td>
+                      <td className="py-3 px-4 text-slate-400">
+                        {new Date(alarm.ts).toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 font-bold text-white font-sans">{alarm.tag}</td>
+                      <td className="py-3 px-4 text-rose-400 font-bold">{alarm.value}</td>
+                      <td className="py-3 px-4 text-slate-400">{alarm.threshold}</td>
+                      <td className="py-3 px-4 font-sans">
+                        {alarm.acknowledged ? (
+                          <span className="text-emerald-400 flex items-center gap-1">
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            <span>Ack by {alarm.acknowledged_by || 'Staff'}</span>
+                          </span>
+                        ) : (
+                          <span className="text-amber-400 font-bold animate-pulse">Unacknowledged</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-slate-400 font-sans text-[11px]">
+                        {isResolved ? (
+                          <span className="text-emerald-400">
+                            Resolved ({new Date(alarm.resolved_at!).toLocaleTimeString()})
+                          </span>
+                        ) : (
+                          <span className="text-red-400 font-bold">Active Breach</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-right font-sans">
+                        {!alarm.acknowledged && isAckPermitted ? (
+                          <button
+                            onClick={() => handleAck(alarm.id)}
+                            disabled={ackLoading === alarm.id}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 border border-emerald-500/40 text-[11px] font-bold transition-all disabled:opacity-50"
+                          >
+                            {ackLoading === alarm.id ? 'Saving...' : 'Acknowledge'}
+                          </button>
+                        ) : alarm.acknowledged ? (
+                          <span className="text-slate-500 text-[11px]">Acknowledged</span>
+                        ) : (
+                          <span className="text-slate-600 text-[11px]" title="Requires operator role">
+                            Read Only
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
   );
 };

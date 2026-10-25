@@ -105,3 +105,37 @@ export interface AuditLogEntry {
   details?: string;
   ip_address?: string;
 }
+
+export interface TagLiveItem {
+  tag: string;
+  value: number;
+  unit: string;
+  equipment?: string;
+  status: 'NORMAL' | 'WARNING' | 'CRITICAL';
+  min?: number;
+  max?: number;
+  ts: string;
+}
+
+export interface LiveTelemetryResponse {
+  ts: string;
+  tags: TagLiveItem[];
+}
+
+export interface HistoryPoint {
+  ts: string;
+  value: number;
+  min_value?: number;
+  max_value?: number;
+  count?: number;
+}
+
+export interface HistoryResponse {
+  tag: string;
+  bucket: string;
+  from_ts: string;
+  to_ts: string;
+  count: number;
+  points: HistoryPoint[];
+}
+

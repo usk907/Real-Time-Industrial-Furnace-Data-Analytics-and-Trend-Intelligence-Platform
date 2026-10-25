@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Server, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, X, Globe, Smartphone } from 'lucide-react';
-import { getApiBaseUrl, setApiBaseUrl, getDeviceType } from '../config';
+import { getApiBase, setApiBase, getDeviceType } from '../config';
 
 interface ServerSettingsModalProps {
   isOpen: boolean;
@@ -18,7 +18,7 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
 
   useEffect(() => {
     if (isOpen) {
-      setUrl(getApiBaseUrl());
+      setUrl(getApiBase());
       setPingStatus(null);
     }
   }, [isOpen]);
@@ -31,7 +31,7 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
     const start = performance.now();
     try {
       const trimmed = targetUrl.trim().replace(/\/+$/, '');
-      const testEndpoint = trimmed ? `${trimmed}/health` : '/health';
+      const testEndpoint = trimmed ? `${trimmed}/api/health` : '/api/health';
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 5000);
 
@@ -55,12 +55,12 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
   };
 
   const handleSave = () => {
-    setApiBaseUrl(url.trim());
+    setApiBase(url.trim());
     window.location.reload();
   };
 
   const handleResetDefault = () => {
-    setApiBaseUrl('');
+    setApiBase('');
     setUrl('');
     setPingStatus(null);
     window.location.reload();

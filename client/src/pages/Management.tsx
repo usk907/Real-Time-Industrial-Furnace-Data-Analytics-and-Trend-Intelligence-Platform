@@ -39,29 +39,53 @@ export const Management: React.FC = () => {
   };
 
   const fetchPlants = async () => {
-    const res = await fetch('/api/plants', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) setPlants(await res.json());
+    try {
+      const res = await fetch('/api/plants', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setPlants(await res.json());
+      else setPlants([]);
+    } catch {
+      setPlants([]);
+    }
   };
 
   const fetchDepts = async () => {
-    const res = await fetch('/api/departments', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) setDepts(await res.json());
+    try {
+      const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setDepts(await res.json());
+      else setDepts([]);
+    } catch {
+      setDepts([]);
+    }
   };
 
   const fetchMachines = async () => {
-    const res = await fetch('/api/machines', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) setMachines(await res.json());
+    try {
+      const res = await fetch('/api/machines', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setMachines(await res.json());
+      else setMachines([]);
+    } catch {
+      setMachines([]);
+    }
   };
 
   const fetchDevices = async () => {
-    const res = await fetch('/api/devices', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) setDevices(await res.json());
+    try {
+      const res = await fetch('/api/devices', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setDevices(await res.json());
+      else setDevices([]);
+    } catch {
+      setDevices([]);
+    }
   };
 
   const fetchUsers = async () => {
-    if (user?.role !== 'Admin') return;
-    const res = await fetch('/api/users', { headers: { 'Authorization': `Bearer ${token}` } });
-    if (res.ok) setUsers(await res.json());
+    try {
+      const res = await fetch('/api/users', { headers: { Authorization: `Bearer ${token}` } });
+      if (res.ok) setUsers(await res.json());
+      else setUsers([]);
+    } catch {
+      setUsers([]);
+    }
   };
 
   const handleOpenAdd = () => {
