@@ -30,7 +30,13 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
+@pytest.fixture(autouse=True)
+def setup_live_db():
+    Base.metadata.create_all(bind=test_engine)
+    app.dependency_overrides[get_db] = override_get_db
+    yield
+    app.dependency_overrides.pop(get_db, None)
+
 client = TestClient(app)
 
 def test_live_telemetry_returns_60_tags():

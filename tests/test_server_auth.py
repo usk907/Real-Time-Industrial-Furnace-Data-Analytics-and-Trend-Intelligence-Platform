@@ -29,13 +29,13 @@ def override_get_db():
     finally:
         db.close()
 
-app.dependency_overrides[get_db] = override_get_db
 client = TestClient(app)
 
 @pytest.fixture(autouse=True)
-def ensure_test_users():
-    """Seeds test users in test database."""
+def setup_test_db():
+    """Seeds test users in test database and attaches dependency override."""
     Base.metadata.create_all(bind=test_engine)
+    app.dependency_overrides[get_db] = override_get_db
     db = TestingSessionLocal()
     try:
         # Admin user
@@ -71,6 +71,9 @@ def ensure_test_users():
         db.commit()
     finally:
         db.close()
+
+    yield
+    app.dependency_overrides.pop(get_db, None)
 
 def test_login_success():
     response = client.post("/api/auth/login", json={"username": "test_admin", "password": "AdminPass123!"})
