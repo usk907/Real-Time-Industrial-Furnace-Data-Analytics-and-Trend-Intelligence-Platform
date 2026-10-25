@@ -22,8 +22,15 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { Chatbot } from './components/Chatbot';
 
-// Protected Route Wrapper (Direct Access Enabled)
-const ProtectedRoute: React.FC<{ children: React.ReactNode; roles?: string[] }> = ({ children }) => {
+// Protected Route Wrapper
+const ProtectedRoute: React.FC<{ children: React.ReactNode; roles?: string[] }> = ({ children, roles }) => {
+  const { token, user } = useAuth();
+  if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+  if (roles && user && !roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
+  }
   return <>{children}</>;
 };
 

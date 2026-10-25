@@ -177,9 +177,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           setConnectionStatus('Disconnected');
           wsRef.current = null;
 
-          // If closed with auth failure (4401), don't aggressively reconnect
-          if (event.code === 4401) {
-            console.warn('[WS]: Authentication rejected (4401). Clearing token.');
+          // If closed with auth failure (4401 or policy violation 1008), stop reconnecting and clear token
+          if (event.code === 4401 || event.code === 1008) {
+            console.warn('[WS]: Authentication rejected. Clearing stale token.');
             localStorage.removeItem('token');
             setToken(null);
             setUser(null);
