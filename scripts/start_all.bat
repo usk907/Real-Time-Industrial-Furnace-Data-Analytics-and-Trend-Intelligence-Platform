@@ -21,9 +21,9 @@ start "IEIP Frontend Dashboard" cmd /k "scripts\start_client.bat"
 echo.
 echo ======================================================================
 echo  ALL 3 SERVICES LAUNCHED!
-echo  - Generator: Emitting 60 tags/sec to MySQL (port 3307)
-echo  - Server:    http://127.0.0.1:8000 (API & WebSocket)
-echo  - Client:    http://127.0.0.1:5173 (Control Dashboard)
+echo  - Generator: Emitting 60 tags/sec (process writes directly to MySQL)
+echo  - Server:    FastAPI listening on http://127.0.0.1:8000 (API & WebSocket)
+echo  - Client:    Vite dashboard on http://127.0.0.1:5173 (Control Dashboard)
 echo ======================================================================
 echo To stop all services, run scripts\stop_all.bat
 echo.
