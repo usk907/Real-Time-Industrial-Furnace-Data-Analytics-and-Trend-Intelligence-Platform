@@ -44,10 +44,13 @@ furnace.db
 *.db
 
 # Android build outputs & caches
-frontend/android/.gradle/
-frontend/android/build/
-frontend/android/app/build/
-frontend/android/capacitor-cordova-android-plugins/build/
-frontend/android/local.properties
+*.apk
+*.aab
 *.apk.idsig
+client/android/.gradle/
+client/android/build/
+client/android/app/build/
+client/android/capacitor-cordova-android-plugins/build/
+client/android/local.properties
+.gradle/
 
