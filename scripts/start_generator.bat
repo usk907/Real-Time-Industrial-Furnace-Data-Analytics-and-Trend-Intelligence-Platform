@@ -1,6 +1,6 @@
 @echo off
 title IEIP Telemetry Generator (Part 1)
-cd /d "%~dp0..\..\generator"
+cd /d "%~dp0..\generator"
 
 echo ======================================================================
 echo       IEIP TELEMETRY GENERATOR (PART 1 - MySQL STREAM)

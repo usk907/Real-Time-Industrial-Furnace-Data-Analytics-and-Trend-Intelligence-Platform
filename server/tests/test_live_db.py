@@ -9,7 +9,7 @@ from pathlib import Path
 
 def get_mysql_credentials():
     """Extracts DB credentials from server/.env, generator/.env or environment."""
-    root_dir = Path(__file__).resolve().parent.parent
+    root_dir = Path(__file__).resolve().parent.parent.parent
     server_env = root_dir / "server" / ".env"
     gen_env = root_dir / "generator" / ".env"
 

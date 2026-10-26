@@ -5,8 +5,8 @@ echo    IEIP - Industrial Energy Intelligence Platform Mobile APK Builder
 echo ======================================================================
 echo.
 
-:: Resolve project root directory (two levels up from scripts\windows)
-set "REPO_ROOT=%~dp0..\.."
+:: Resolve project root directory (one level up from scripts)
+set "REPO_ROOT=%~dp0.."
 cd /d "%REPO_ROOT%\client"
 
 :: 1. Ensure production web assets are built

@@ -4,9 +4,10 @@ Unit tests for Generator Tag Dictionary and Random Walk logic.
 import sys
 from pathlib import Path
 
-# Add project root to sys.path
-root_dir = Path(__file__).resolve().parent.parent
-sys.path.insert(0, str(root_dir / "generator"))
+# Add generator directory to sys.path
+generator_dir = Path(__file__).resolve().parent.parent
+if str(generator_dir) not in sys.path:
+    sys.path.insert(0, str(generator_dir))
 
 from tags import TAGS, TAG_MAP
 from generator import FurnaceDataGenerator

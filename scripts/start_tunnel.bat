@@ -1,6 +1,6 @@
 @echo off
 title IEIP Cloudflare Tunnel (HTTPS/WSS Public Access)
-cd /d "%~dp0..\.."
+cd /d "%~dp0.."
 
 echo ======================================================================
 echo       IEIP SECURE CLOUDFLARE TUNNEL (PUBLIC HTTPS / WSS GATEWAY)

@@ -1,6 +1,6 @@
 @echo off
 title IEIP FastAPI Server (Part 2)
-cd /d "%~dp0..\.."
+cd /d "%~dp0.."
 
 echo ======================================================================
 echo       IEIP INDUSTRIAL ENERGY SERVER (PART 2 - FASTAPI)

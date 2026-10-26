@@ -6,16 +6,19 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker, Session
 from server.app.config import settings
 
-# PyMySQL pool configuration
-engine = create_engine(
-    settings.DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=15,
-    max_overflow=25,
-    pool_timeout=10,
-    pool_recycle=1800,
-    future=True
-)
+# PyMySQL pool configuration (adapts parameters if running on SQLite in-memory test engine)
+is_sqlite = settings.DATABASE_URL.startswith("sqlite")
+engine_kwargs = {"future": True}
+if not is_sqlite:
+    engine_kwargs.update({
+        "pool_pre_ping": True,
+        "pool_size": 15,
+        "max_overflow": 25,
+        "pool_timeout": 10,
+        "pool_recycle": 1800,
+    })
+
+engine = create_engine(settings.DATABASE_URL, **engine_kwargs)
 
 SessionLocal = sessionmaker(
     bind=engine,

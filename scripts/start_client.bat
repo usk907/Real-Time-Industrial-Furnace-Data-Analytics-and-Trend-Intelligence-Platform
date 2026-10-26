@@ -1,6 +1,6 @@
 @echo off
 title IEIP Client Website (Part 3)
-cd /d "%~dp0..\..\client"
+cd /d "%~dp0..\client"
 
 echo ======================================================================
 echo       IEIP FRONTEND DASHBOARD (PART 3 - REACT / VITE)

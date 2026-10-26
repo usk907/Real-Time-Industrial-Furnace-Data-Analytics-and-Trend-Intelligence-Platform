@@ -1,6 +1,6 @@
 @echo off
 title IEIP Database & Users Setup
-cd /d "%~dp0..\.."
+cd /d "%~dp0.."
 
 echo ======================================================================
 echo          IEIP MySQL DATABASE ^& USERS SETUP
