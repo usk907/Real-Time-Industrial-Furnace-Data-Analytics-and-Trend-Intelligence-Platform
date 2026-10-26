@@ -25,10 +25,10 @@ export function getApiBase(): string {
   );
 
   if (isCapacitor) {
-    return 'http://10.0.2.2:8001';
+    return 'http://10.0.2.2:8000';
   }
 
-  return 'http://localhost:8001';
+  return 'http://localhost:8000';
 }
 
 export function setApiBase(url: string) {

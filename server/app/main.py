@@ -120,7 +120,7 @@ def root_info():
         "status": "ONLINE",
         "api_docs": "/docs",
         "health": "/api/health",
-        "frontend_dashboard": "http://localhost:5174"
+        "frontend_dashboard": "http://localhost:5173"
     }
 
 # Include domain routers
