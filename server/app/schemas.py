@@ -3,7 +3,7 @@ Pydantic Request & Response Schemas
 """
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel, Field, ConfigDict
+from pydantic import BaseModel, ConfigDict
 
 # --- Auth Schemas ---
 class LoginRequest(BaseModel):

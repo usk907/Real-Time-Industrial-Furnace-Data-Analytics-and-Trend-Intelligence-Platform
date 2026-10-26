@@ -9,9 +9,14 @@ import pymysql
 from datetime import datetime, timedelta
 
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
-DB_PORT = int(os.getenv("DB_PORT", "3306"))
+DB_PORT = int(os.getenv("DB_PORT", "3307"))
 DB_USER = os.getenv("DB_USER", "admin_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "AdminPassword123!")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+if not DB_PASSWORD:
+    raise ValueError(
+        "DB_PASSWORD environment variable is required to run prune_readings.py. "
+        "Set DB_PASSWORD before executing data retention cleanup."
+    )
 DB_NAME = os.getenv("DB_NAME", "furnace_db")
 RETENTION_DAYS = int(os.getenv("RETENTION_DAYS", "7"))
 

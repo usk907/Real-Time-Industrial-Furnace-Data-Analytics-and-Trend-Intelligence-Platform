@@ -3,8 +3,7 @@ WebSocket Telemetry Streaming Endpoint
 Validates JWT on handshake, subscribes connection to broadcaster, and handles lifecycle.
 """
 from typing import Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query, status
-from jose import JWTError
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
 from server.app.auth import decode_access_token
 from server.app.services.broadcaster import broadcaster
 

@@ -36,19 +36,42 @@ class Settings(BaseSettings):
         extra="ignore"
     )
 
-    DATABASE_URL: str = "mysql+pymysql://server_user:ServerPassword123!@127.0.0.1:3307/furnace_db"
-    JWT_SECRET: str = "e9f7d2a8b3c4e5f6a1b2c3d4e5f60718293a4b5c6d7e8f90123456789abcdef0"
+    DATABASE_URL: str
+    JWT_SECRET: str
     JWT_EXPIRE_MINUTES: int = 1440
     ADMIN_USERNAME: str = "admin"
-    ADMIN_PASSWORD: str = "Admin@Secure2026!"
+    ADMIN_PASSWORD: str
     CORS_ORIGINS: Union[str, List[str]] = "http://localhost:5173,http://127.0.0.1:5173"
     WS_PUSH_INTERVAL_SECONDS: float = 1.0
+
+    @field_validator("DATABASE_URL")
+    @classmethod
+    def validate_database_url(cls, v: str) -> str:
+        clean = v.strip().lower()
+        if (
+            not v
+            or "<your_" in clean
+            or "placeholder" in clean
+            or "changeme" in clean
+            or "replace_with" in clean
+        ):
+            raise ValueError(
+                "Refusing to start: DATABASE_URL contains placeholder values. "
+                "Please configure a valid database connection string in server/.env."
+            )
+        return v
 
     @field_validator("JWT_SECRET")
     @classmethod
     def validate_jwt_secret(cls, v: str) -> str:
         clean = v.strip().lower()
-        if not v or clean in PLACEHOLDER_SECRETS or "placeholder" in clean or len(v) < 16:
+        if (
+            not v
+            or clean in PLACEHOLDER_SECRETS
+            or "placeholder" in clean
+            or "replace_with" in clean
+            or len(v) < 16
+        ):
             raise ValueError(
                 "Refusing to start: JWT_SECRET is set to an insecure default or placeholder value. "
                 "Please configure a strong random secret (min 16 chars) in server/.env."
@@ -59,7 +82,13 @@ class Settings(BaseSettings):
     @classmethod
     def validate_admin_password(cls, v: str) -> str:
         clean = v.strip().lower()
-        if not v or clean in PLACEHOLDER_PASSWORDS or "placeholder" in clean or len(v) < 8:
+        if (
+            not v
+            or clean in PLACEHOLDER_PASSWORDS
+            or "placeholder" in clean
+            or "replace_with" in clean
+            or len(v) < 8
+        ):
             raise ValueError(
                 "Refusing to start: ADMIN_PASSWORD is set to a default placeholder. "
                 "Please set a strong password (min 8 chars) in server/.env."

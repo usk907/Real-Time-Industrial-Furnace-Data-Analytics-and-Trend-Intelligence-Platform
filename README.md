@@ -73,7 +73,7 @@ flowchart LR
 | `DB_HOST` | `127.0.0.1` | MySQL server hostname (binds to localhost). |
 | `DB_PORT` | `3306` | MySQL server port. |
 | `DB_USER` | `generator_user` | Least-privilege MySQL user (INSERT/REPLACE on readings only). |
-| `DB_PASSWORD` | `GenPassword123!` | Password for `generator_user`. |
+| `DB_PASSWORD` | *(Configured in generator/.env)* | Password for `generator_user`. Refuses to start if missing or placeholder. |
 | `DB_NAME` | `furnace_db` | Target database name. |
 | `GEN_INTERVAL_SECONDS` | `1.0` | Cadence of telemetry emission in seconds. |
 | `LOG_INTERVAL_TICKS` | `10` | Output logging cadence (1 line per 10 ticks). |

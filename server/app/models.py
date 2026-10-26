@@ -1,7 +1,6 @@
 """
 SQLAlchemy 2.0 ORM Models for Core Schema (Contract 1 <-> 2)
 """
-from datetime import datetime
 from sqlalchemy import Column, Integer, BigInteger, String, Float, Boolean, DateTime, SmallInteger, Enum
 from sqlalchemy.sql import func
 from server.app.database import Base

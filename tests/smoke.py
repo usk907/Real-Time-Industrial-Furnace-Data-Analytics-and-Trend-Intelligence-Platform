@@ -11,7 +11,17 @@ from datetime import datetime
 
 SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8000")
 ADMIN_USER = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASS = os.getenv("ADMIN_PASSWORD", "Admin@Secure2026!")
+ADMIN_PASS = os.getenv("ADMIN_PASSWORD")
+if not ADMIN_PASS:
+    from pathlib import Path
+    _env_file = Path(__file__).resolve().parent.parent / "server" / ".env"
+    if _env_file.exists():
+        for _line in _env_file.read_text(encoding="utf-8").splitlines():
+            if _line.strip().startswith("ADMIN_PASSWORD="):
+                ADMIN_PASS = _line.split("=", 1)[1].strip().strip("'\"")
+                break
+if not ADMIN_PASS:
+    raise ValueError("ADMIN_PASSWORD must be configured in environment or server/.env")
 
 def run_smoke_test():
     print("=" * 70)

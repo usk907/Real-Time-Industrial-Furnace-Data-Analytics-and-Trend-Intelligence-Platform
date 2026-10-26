@@ -18,14 +18,6 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 ALGORITHM = "HS256"
 
-# Role hierarchy levels (lower number = higher privilege)
-ROLE_HIERARCHY = {
-    "admin": 1,
-    "manager": 2,
-    "engineer": 3,
-    "operator": 4,
-    "viewer": 5
-}
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     return pwd_context.verify(plain_password, hashed_password)

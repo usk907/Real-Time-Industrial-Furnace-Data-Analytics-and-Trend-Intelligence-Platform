@@ -9,7 +9,7 @@ import os
 import sys
 import time
 import random
-from datetime import datetime, timezone
+from datetime import datetime
 from pathlib import Path
 import pymysql
 from dotenv import load_dotenv
@@ -21,12 +21,17 @@ if env_path.exists():
 else:
     load_dotenv()
 
-from tags import TAGS, TAG_MAP
+from tags import TAGS
 
 DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = int(os.getenv("DB_PORT", "3307"))
 DB_USER = os.getenv("DB_USER", "generator_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "GenPassword123!")
+DB_PASSWORD = os.getenv("DB_PASSWORD")
+if not DB_PASSWORD or "<your_" in DB_PASSWORD.lower() or "placeholder" in DB_PASSWORD.lower() or "replace_with" in DB_PASSWORD.lower():
+    raise ValueError(
+        "Refusing to start: DB_PASSWORD is missing or set to a placeholder in generator/.env. "
+        "Please configure a valid database password."
+    )
 DB_NAME = os.getenv("DB_NAME", "furnace_db")
 GEN_INTERVAL_SECONDS = float(os.getenv("GEN_INTERVAL_SECONDS", "1.0"))
 LOG_INTERVAL_TICKS = int(os.getenv("LOG_INTERVAL_TICKS", "10"))
