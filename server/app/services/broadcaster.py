@@ -3,17 +3,21 @@ WebSocket Broadcaster Service
 Maintains connected clients and pushes live furnace telemetry frames.
 Queries MySQL furnace_latest once per tick, regardless of how many clients are connected.
 """
-import json
+
 import asyncio
+import json
 from datetime import datetime
 from pathlib import Path
-from typing import Set, Dict, Any
+from typing import Any, Dict, Set
+
 from fastapi import WebSocket, WebSocketDisconnect
+
 from server.app.config import settings
 from server.app.database import SessionLocal
 from server.app.models import FurnaceLatest
 
 TAG_META_PATH = Path(__file__).resolve().parent.parent / "tag_meta.json"
+
 
 class WebSocketBroadcaster:
     def __init__(self):
@@ -60,28 +64,32 @@ class WebSocketBroadcaster:
                     ratio = (val - max_val) / span if val > max_val else (min_val - val) / span
                     status = "CRITICAL" if ratio >= 0.10 else "WARNING"
 
-            tags_data.append({
-                "tag": row.tag,
-                "value": round(val, 2),
-                "unit": meta.get("unit", ""),
-                "equipment": meta.get("equipment", ""),
-                "min": min_val,
-                "max": max_val,
-                "status": status,
-                "ts": row.ts.isoformat() if row.ts else now.isoformat()
-            })
+            tags_data.append(
+                {
+                    "tag": row.tag,
+                    "value": round(val, 2),
+                    "unit": meta.get("unit", ""),
+                    "equipment": meta.get("equipment", ""),
+                    "min": min_val,
+                    "max": max_val,
+                    "status": status,
+                    "ts": row.ts.isoformat() if row.ts else now.isoformat(),
+                }
+            )
 
         frame = {
             "type": "telemetry_update",
             "ts": now.isoformat(),
             "count": len(tags_data),
-            "tags": tags_data
+            "tags": tags_data,
         }
         return json.dumps(frame)
 
     async def broadcast_loop(self):
         """Infinite loop broadcasting once every WS_PUSH_INTERVAL_SECONDS."""
-        print(f"[BROADCASTER]: WebSocket broadcaster loop running (Cadence: {settings.WS_PUSH_INTERVAL_SECONDS}s)...")
+        print(
+            f"[BROADCASTER]: WebSocket broadcaster loop running (Cadence: {settings.WS_PUSH_INTERVAL_SECONDS}s)..."
+        )
         while True:
             try:
                 # Always query once per tick
@@ -107,5 +115,6 @@ class WebSocketBroadcaster:
                 print(f"[BROADCASTER ERROR]: Error during broadcast cycle: {e}")
 
             await asyncio.sleep(settings.WS_PUSH_INTERVAL_SECONDS)
+
 
 broadcaster = WebSocketBroadcaster()

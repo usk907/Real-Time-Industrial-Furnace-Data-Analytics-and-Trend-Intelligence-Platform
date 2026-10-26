@@ -1,20 +1,25 @@
 """
 Pydantic Request & Response Schemas
 """
-from typing import List, Optional
+
 from datetime import datetime
+from typing import List, Optional
+
 from pydantic import BaseModel, ConfigDict
+
 
 # --- Auth Schemas ---
 class LoginRequest(BaseModel):
     username: str
     password: str
 
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
     role: str
     username: str
+
 
 class UserOut(BaseModel):
     id: int
@@ -23,11 +28,13 @@ class UserOut(BaseModel):
     created_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
 
+
 # --- Health Schema ---
 class HealthResponse(BaseModel):
     status: str
     db_ok: bool
     server_time: str
+
 
 # --- Live Telemetry Schemas ---
 class TagLiveItem(BaseModel):
@@ -40,9 +47,11 @@ class TagLiveItem(BaseModel):
     min: Optional[float] = None
     max: Optional[float] = None
 
+
 class LiveResponse(BaseModel):
     ts: datetime
     tags: List[TagLiveItem]
+
 
 # --- History Schemas ---
 class HistoryPoint(BaseModel):
@@ -52,6 +61,7 @@ class HistoryPoint(BaseModel):
     max_value: Optional[float] = None
     count: Optional[int] = None
 
+
 class HistoryResponse(BaseModel):
     tag: str
     bucket: str
@@ -59,6 +69,7 @@ class HistoryResponse(BaseModel):
     to_ts: datetime
     count: int
     points: List[HistoryPoint]
+
 
 # --- Alarms Schemas ---
 class AlarmOut(BaseModel):
@@ -72,6 +83,7 @@ class AlarmOut(BaseModel):
     acknowledged_by: Optional[str] = None
     resolved_at: Optional[datetime] = None
     model_config = ConfigDict(from_attributes=True)
+
 
 class AlarmAckResponse(BaseModel):
     success: bool

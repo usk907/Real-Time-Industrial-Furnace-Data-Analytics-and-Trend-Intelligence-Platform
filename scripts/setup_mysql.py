@@ -3,11 +3,13 @@ Automated MySQL Database & Users Initializer for IEIP
 Executes db/schema.sql and db/create_users.sql via PyMySQL.
 Reads user credentials dynamically from generator/.env and server/.env.
 """
-import os
-import sys
+
 import getpass
+import os
 import re
+import sys
 from pathlib import Path
+
 
 def load_env_file(filepath: Path) -> dict:
     vals = {}
@@ -19,6 +21,7 @@ def load_env_file(filepath: Path) -> dict:
                 vals[k.strip()] = v.strip().strip("'\"")
     return vals
 
+
 def extract_db_password_from_url(database_url: str) -> str:
     """Extracts password from a SQLAlchemy URL like mysql+pymysql://user:password@host:port/db."""
     match = re.search(r"://[^:]+:([^@]+)@", database_url)
@@ -26,11 +29,14 @@ def extract_db_password_from_url(database_url: str) -> str:
         return match.group(1)
     return ""
 
+
 def main():
     try:
         import pymysql
     except ImportError:
-        print("[ERROR] pymysql is not installed in this environment. Run using server/venv or generator/venv.")
+        print(
+            "[ERROR] pymysql is not installed in this environment. Run using server/venv or generator/venv."
+        )
         sys.exit(1)
 
     root_dir = Path(__file__).resolve().parent.parent
@@ -65,7 +71,12 @@ def main():
     if not server_password:
         server_password = getpass.getpass("Enter password for server_user: ")
     if not admin_password:
-        admin_password = getpass.getpass("Enter password for admin_user (press Enter to reuse generator password): ") or gen_password
+        admin_password = (
+            getpass.getpass(
+                "Enter password for admin_user (press Enter to reuse generator password): "
+            )
+            or gen_password
+        )
 
     # Prompt for root password
     if len(sys.argv) > 1:
@@ -76,11 +87,7 @@ def main():
     # Connect as root
     try:
         conn = pymysql.connect(
-            host="127.0.0.1",
-            port=target_port,
-            user="root",
-            password=root_pwd,
-            autocommit=True
+            host="127.0.0.1", port=target_port, user="root", password=root_pwd, autocommit=True
         )
     except Exception as e:
         print(f"\n[ERROR] Failed to connect to MySQL as root on port {target_port}: {e}")
@@ -133,7 +140,7 @@ def main():
             port=target_port,
             user="generator_user",
             password=gen_password,
-            database="furnace_db"
+            database="furnace_db",
         )
         test_conn.close()
         print(" [OK] generator_user connected to furnace_db successfully!")
@@ -148,7 +155,7 @@ def main():
             port=target_port,
             user="server_user",
             password=server_password,
-            database="furnace_db"
+            database="furnace_db",
         )
         test_conn.close()
         print(" [OK] server_user connected to furnace_db successfully!")
@@ -158,6 +165,7 @@ def main():
     print("=" * 65)
     print(" DATABASE SETUP COMPLETE! You can now start the generator and server.")
     print("=" * 65)
+
 
 if __name__ == "__main__":
     main()

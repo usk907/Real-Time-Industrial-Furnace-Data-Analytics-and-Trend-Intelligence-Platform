@@ -5,19 +5,26 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Python virtual environment
+# Python virtual environment & caches
 venv/
 ENV/
 env/
 .venv/
+*/venv/
+**/venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
+.pytest_cache/
+.ruff_cache/
 
 # Environment variables
 .env
 .env.local
+.env.*
+!.env.example
+*.env
 
 # Build output
 dist/
@@ -25,14 +32,13 @@ build/
 out/
 
 # Report generated files
-backend/reports/
 reports/
 
 # Operating system files
 .DS_Store
 Thumbs.db
 
-# IDE settings
+# IDE & Editor settings
 .vscode/
 .idea/
 .project
@@ -42,6 +48,8 @@ Thumbs.db
 # Local Databases
 furnace.db
 *.db
+*.sqlite
+*.sqlite3
 
 # Android build outputs & caches
 *.apk
@@ -53,4 +61,3 @@ client/android/app/build/
 client/android/capacitor-cordova-android-plugins/build/
 client/android/local.properties
 .gradle/
-

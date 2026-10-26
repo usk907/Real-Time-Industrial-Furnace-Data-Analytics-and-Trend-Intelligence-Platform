@@ -2,21 +2,25 @@
 Live Telemetry Endpoints
 Provides real-time tag snapshots from furnace_latest joined with tag_meta.json.
 """
+
 import json
-from pathlib import Path
 from datetime import datetime
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any, Dict
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
+
+from server.app.auth import get_current_user
 from server.app.database import get_db
 from server.app.models import FurnaceLatest, User
 from server.app.schemas import LiveResponse, TagLiveItem
-from server.app.auth import get_current_user
 
 router = APIRouter(prefix="/api/live", tags=["Live Telemetry"])
 TAG_META_PATH = Path(__file__).resolve().parent.parent / "tag_meta.json"
 
 _tag_meta_cache: Dict[str, Dict[str, Any]] = {}
+
 
 def get_tag_metadata() -> Dict[str, Dict[str, Any]]:
     global _tag_meta_cache
@@ -26,10 +30,10 @@ def get_tag_metadata() -> Dict[str, Dict[str, Any]]:
             _tag_meta_cache = {t["name"]: t for t in tags}
     return _tag_meta_cache
 
+
 @router.get("", response_model=LiveResponse)
 def get_live_telemetry(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    db: Session = Depends(get_db), current_user: User = Depends(get_current_user)
 ):
     """
     Returns latest telemetry readings for all furnace tags from furnace_latest,
@@ -54,18 +58,17 @@ def get_live_telemetry(
                 ratio = (val - max_val) / span if val > max_val else (min_val - val) / span
                 status = "CRITICAL" if ratio >= 0.10 else "WARNING"
 
-        tag_items.append(TagLiveItem(
-            tag=row.tag,
-            value=round(val, 2),
-            unit=meta.get("unit", ""),
-            equipment=meta.get("equipment", "General Plant"),
-            min=min_val,
-            max=max_val,
-            status=status,
-            ts=row.ts or now
-        ))
+        tag_items.append(
+            TagLiveItem(
+                tag=row.tag,
+                value=round(val, 2),
+                unit=meta.get("unit", ""),
+                equipment=meta.get("equipment", "General Plant"),
+                min=min_val,
+                max=max_val,
+                status=status,
+                ts=row.ts or now,
+            )
+        )
 
-    return LiveResponse(
-        ts=now,
-        tags=tag_items
-    )
+    return LiveResponse(ts=now, tags=tag_items)

@@ -1,120 +1,122 @@
-# IEIP Platform Runbook & Operational Guide
+# IEIP Operational Runbook
 
-This document describes how to operate, test, build, and maintain the **Industrial Energy Intelligence Platform (IEIP)**.
-
----
-
-## 1. Directory Structure Overview
-
-```text
-├── backend/            # FastAPI REST & WebSocket server
-├── tap_server/         # High-throughput industrial telemetry ingestion server (Port 8001)
-├── simulator/          # SCADA PLC/RTU telemetry simulator (1 Hz)
-├── frontend/           # React 19 + TypeScript + Vite + Tailwind CSS + Capacitor
-├── database/
-│   ├── mysql/          # MySQL / TiDB Workbench migration & setup scripts
-│   └── postgres/       # TimescaleDB initialization scripts
-├── scripts/
-│   ├── tools/          # Unified database inspection & query CLI (`db_tool.py`)
-│   └── windows/        # Local process management, cloudflare tunnels, APK builder
-├── tests/              # Diagnostics, pipeline checks, and page API benchmarks
-├── releases/           # Pre-compiled release artifacts (e.g. `IEIP-Mobile.apk`)
-└── docs/               # System architecture, API specifications, and database designs
-```
+This guide covers initial setup, daily operation, testing, and maintenance of the **Industrial Energy Intelligence Platform (IEIP)**.
 
 ---
 
-## 2. Starting & Stopping Services
+## 1. Prerequisites
 
-### Local Windows Development (Direct Processes)
-You can launch or stop all four services (Backend, TAP Ingestion, SCADA Simulator, React Vite Frontend) via PowerShell or Batch:
+- **Python**: 3.10 or higher
+- **Node.js**: 18.x or higher with `npm`
+- **MySQL**: MySQL 5.7+ or MariaDB running locally on `127.0.0.1:3307`
+- **Cloudflare Tunnel** (`cloudflared` CLI, optional for remote access)
+- **Java / Android SDK** (optional for native mobile APK builds)
 
-- **Start Services**:
-  ```powershell
-  # Recommended:
-  .\scripts\windows\start_local.ps1
-  # Or legacy wrapper:
-  .\start_local.bat
-  ```
-- **Stop Services**:
-  ```powershell
-  # Recommended:
-  .\scripts\windows\stop_local.ps1
-  # Or legacy wrapper:
-  .\stop_local.bat
-  ```
+---
 
-### Docker Compose Stack
-For containerized deployment (TimescaleDB, InfluxDB, Redis, TAP Server, Backend, Simulator, Frontend):
+## 2. Initial Setup
+
+### A. Environment Configuration
+Copy the template files and fill in strong credentials:
 ```bash
-docker compose up -d --build
-docker compose ps
-docker compose logs -f
+# Generator environment
+cp generator/.env.example generator/.env
+
+# Server environment
+cp server/.env.example server/.env
 ```
+> [!NOTE]
+> The server and generator validate credentials on startup and will refuse to run if default placeholder values are detected.
 
----
-
-## 3. Database Administration & Inspection
-
-Use the unified `db_tool.py` located at `scripts/tools/db_tool.py` (or legacy root wrappers `view_db.py` / `query_db.py`):
-
-```bash
-# 1. Inspect table counts, active alarms, and latest telemetry
-python scripts/tools/db_tool.py --inspect
-
-# 2. Run an ad-hoc SQL query with formatted output
-python scripts/tools/db_tool.py "SELECT count(*) FROM sensor_readings;"
-
-# Legacy shortcuts (at project root):
-python view_db.py
-python query_db.py "SELECT username, email FROM users;"
-```
-
----
-
-## 4. Testing & System Diagnostics
-
-Centralized under `tests/`:
-
-```bash
-# Run database & service connectivity check
-python tests/diagnostics.py --connectivity
-
-# Run TAP server 8001 ingestion batch verification
-python tests/diagnostics.py --tap
-
-# Run comprehensive latency benchmark across all 12 page APIs
-python tests/diagnostics.py --pages
-
-# Run the full diagnostic suite
-python tests/diagnostics.py --all
-
-# Legacy shortcuts (at project root):
-python run_diagnostics.py
-python check_connectivity.py
-python test_tap_pipeline.py
-python test_all_pages.py
-```
-
----
-
-## 5. Android Mobile APK Compilation
-
-To build a standalone Android APK using Capacitor:
-
+### B. Initialize Database & Users
+Ensure your MySQL service is running on `127.0.0.1:3307`, then run:
 ```cmd
-:: Run build script
-.\scripts\windows\build_apk.bat
+scripts\init_database.bat
 ```
-The output APK is automatically placed in:
-`releases/IEIP-Mobile.apk`
+Or execute via python:
+```powershell
+.\server\venv\Scripts\python.exe scripts\setup_mysql.py
+```
+This applies `db/schema.sql`, creates least-privilege users (`generator_user`, `server_user`, `admin_user`), and verifies connectivity.
 
 ---
 
-## 6. Remote Access & Cloudflare Live Tunnel
+## 3. Starting & Stopping Services
 
-To expose the local development server (port 5173 and backend proxy) securely to the internet:
+### Starting All Services Concurrently
 ```cmd
-.\scripts\windows\tunnel.bat
+scripts\start_all.bat
 ```
-This generates a temporary `*.trycloudflare.com` public URL accessible from any mobile device on 4G/5G.
+This opens three independent terminal windows:
+1. **Generator**: Emits 60 tags once per second to MySQL tables.
+2. **Server**: Runs FastAPI backend on `http://127.0.0.1:8000`.
+3. **Client**: Starts Vite dev server on `http://127.0.0.1:5173`.
+
+### Starting Services Individually
+- **Generator**: `scripts\start_generator.bat`
+- **Server**: `scripts\start_server.bat`
+- **Client**: `scripts\start_client.bat`
+
+### Stopping All Services
+```cmd
+scripts\stop_all.bat
+```
+Gracefully terminates all active IEIP terminal windows.
+
+---
+
+## 4. Verification & Testing
+
+### Automated Test Suite (Pytest)
+Run the consolidated test suite from the repository root:
+```powershell
+.\server\venv\Scripts\python.exe -m pytest -v
+```
+To run only generator or server suites:
+```powershell
+.\server\venv\Scripts\python.exe -m pytest generator/tests
+.\server\venv\Scripts\python.exe -m pytest server/tests
+```
+
+### End-to-End Pipeline Smoke Test
+With generator and server actively running, verify the live pipeline:
+```powershell
+.\server\venv\Scripts\python.exe scripts\smoke_test.py
+```
+
+### Live WebSocket Stream Monitor
+Verify streaming telemetry frames over WebSockets:
+```powershell
+.\server\venv\Scripts\python.exe scripts\ws_client.py
+```
+
+---
+
+## 5. Android Mobile APK Build
+
+To compile a native Android APK:
+```cmd
+scripts\build_apk.bat
+```
+The script compiles web assets, synchronizes Capacitor, invokes Gradle, and places the compiled APK in `releases/IEIP-Mobile.apk`.
+
+---
+
+## 6. Cloudflare Secure Tunnel
+
+To access the server securely from mobile devices or external networks:
+```cmd
+scripts\start_tunnel.bat
+```
+Exposes `http://127.0.0.1:8000` via Cloudflare's edge network without opening any firewall ports.
+
+---
+
+## 7. Data Retention & Maintenance
+
+To prune historical telemetry records older than 7 days from `furnace_readings`:
+```powershell
+$env:DB_PASSWORD="<admin_password>"
+.\server\venv\Scripts\python.exe db\prune_readings.py
+```
+Or execute `db/prune_readings.sql` via MySQL client or Windows Task Scheduler.

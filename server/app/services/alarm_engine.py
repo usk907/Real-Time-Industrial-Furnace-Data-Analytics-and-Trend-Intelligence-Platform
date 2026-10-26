@@ -3,15 +3,19 @@ Background Alarm Monitoring Engine
 Continuously evaluates furnace_latest readings against tag boundaries.
 Logs new alarms on threshold breach and resolves them upon return to normal.
 """
-import json
+
 import asyncio
+import json
 from datetime import datetime
 from pathlib import Path
+
 from sqlalchemy.orm import Session
+
 from server.app.database import SessionLocal
-from server.app.models import FurnaceLatest, Alarm
+from server.app.models import Alarm, FurnaceLatest
 
 TAG_META_PATH = Path(__file__).resolve().parent.parent / "tag_meta.json"
+
 
 class AlarmEngine:
     def __init__(self):
@@ -33,7 +37,9 @@ class AlarmEngine:
             for al in unresolved:
                 self.active_alarms[al.tag] = al.id
             if unresolved:
-                print(f"[ALARM ENGINE]: Restored {len(unresolved)} active unresolved alarms from database.")
+                print(
+                    f"[ALARM ENGINE]: Restored {len(unresolved)} active unresolved alarms from database."
+                )
         except Exception as e:
             print(f"[ALARM ENGINE WARNING]: Could not restore active alarms from DB: {e}")
 
@@ -78,13 +84,15 @@ class AlarmEngine:
                         value=round(val, 2),
                         threshold=round(threshold, 2),
                         severity=severity,
-                        acknowledged=False
+                        acknowledged=False,
                     )
                     db.add(new_alarm)
                     db.commit()
                     db.refresh(new_alarm)
                     self.active_alarms[row.tag] = new_alarm.id
-                    print(f"[{now.strftime('%H:%M:%S')}] [ALARM TRIGGERED] {row.tag}: {val} (Threshold: {threshold}, Severity: {severity})")
+                    print(
+                        f"[{now.strftime('%H:%M:%S')}] [ALARM TRIGGERED] {row.tag}: {val} (Threshold: {threshold}, Severity: {severity})"
+                    )
             else:
                 # Value is within normal range
                 if row.tag in self.active_alarms:
@@ -94,7 +102,9 @@ class AlarmEngine:
                     if existing_alarm:
                         existing_alarm.resolved_at = now
                         db.commit()
-                        print(f"[{now.strftime('%H:%M:%S')}] [ALARM RESOLVED] {row.tag} returned to normal ({val}). Alarm #{alarm_id} closed.")
+                        print(
+                            f"[{now.strftime('%H:%M:%S')}] [ALARM RESOLVED] {row.tag} returned to normal ({val}). Alarm #{alarm_id} closed."
+                        )
 
     async def run_loop(self):
         """Asynchronous background worker polling every second."""
@@ -117,5 +127,6 @@ class AlarmEngine:
                 print(f"[ALARM ENGINE ERROR]: {e}")
 
             await asyncio.sleep(1.0)
+
 
 alarm_engine = AlarmEngine()

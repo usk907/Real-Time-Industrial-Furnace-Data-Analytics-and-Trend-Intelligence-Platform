@@ -1,26 +1,25 @@
 """
 Tests for Server Authentication, JWT Token Validation, RBAC, and WebSocket Handshake.
 """
+
 import pytest
-from datetime import datetime, timezone
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from server.app.main import app
 from server.app.auth import create_access_token, get_password_hash
-from server.app.models import User
 from server.app.database import Base, get_db
+from server.app.main import app
+from server.app.models import User
 
 # Isolated in-memory test database for deterministic test runs
 test_engine = create_engine(
-    "sqlite:///:memory:",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
+    "sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 Base.metadata.create_all(bind=test_engine)
+
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -29,7 +28,9 @@ def override_get_db():
     finally:
         db.close()
 
+
 client = TestClient(app)
+
 
 @pytest.fixture(autouse=True)
 def setup_test_db():
@@ -44,7 +45,7 @@ def setup_test_db():
             admin = User(
                 username="test_admin",
                 password_hash=get_password_hash("AdminPass123!"),
-                role="admin"
+                role="admin",
             )
             db.add(admin)
 
@@ -54,7 +55,7 @@ def setup_test_db():
             viewer = User(
                 username="test_viewer",
                 password_hash=get_password_hash("ViewerPass123!"),
-                role="viewer"
+                role="viewer",
             )
             db.add(viewer)
 
@@ -64,7 +65,7 @@ def setup_test_db():
             operator = User(
                 username="test_operator",
                 password_hash=get_password_hash("OperatorPass123!"),
-                role="operator"
+                role="operator",
             )
             db.add(operator)
 
@@ -75,18 +76,25 @@ def setup_test_db():
     yield
     app.dependency_overrides.pop(get_db, None)
 
+
 def test_login_success():
-    response = client.post("/api/auth/login", json={"username": "test_admin", "password": "AdminPass123!"})
+    response = client.post(
+        "/api/auth/login", json={"username": "test_admin", "password": "AdminPass123!"}
+    )
     assert response.status_code == 200
     data = response.json()
     assert "access_token" in data
     assert data["role"] == "admin"
     assert data["username"] == "test_admin"
 
+
 def test_login_failure():
-    response = client.post("/api/auth/login", json={"username": "test_admin", "password": "WrongPassword"})
+    response = client.post(
+        "/api/auth/login", json={"username": "test_admin", "password": "WrongPassword"}
+    )
     assert response.status_code == 401
     assert "Invalid username or password" in response.json()["detail"]
+
 
 def test_token_required_on_protected_endpoints():
     # Without token
@@ -100,6 +108,7 @@ def test_token_required_on_protected_endpoints():
     res_health = client.get("/api/health")
     assert res_health.status_code == 200
     assert "status" in res_health.json()
+
 
 def test_role_enforcement():
     # Generate token for viewer
@@ -122,6 +131,7 @@ def test_role_enforcement():
     # May be 404 (if alarm 1 doesn't exist) or 200, but NOT 403 Forbidden!
     assert res_ack_op.status_code != 403
 
+
 def test_websocket_rejects_bad_token():
     with pytest.raises(Exception):
         with client.websocket_connect("/api/ws?token=invalid_garbage_token") as ws:
@@ -130,6 +140,7 @@ def test_websocket_rejects_bad_token():
     with pytest.raises(Exception):
         with client.websocket_connect("/api/ws") as ws:
             ws.receive_text()
+
 
 if __name__ == "__main__":
     pytest.main(["-v", __file__])

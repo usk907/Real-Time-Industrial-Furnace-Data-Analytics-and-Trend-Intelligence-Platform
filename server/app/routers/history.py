@@ -3,32 +3,36 @@ Historical Telemetry Query Endpoint
 Provides time-series data with dynamic bucket downsampling (raw, 1m, 5m, 1h).
 Limits results to 5000 points with helpful error feedback.
 """
+
 from datetime import datetime, timedelta
 from typing import Optional
+
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy.orm import Session
 from sqlalchemy import text
+from sqlalchemy.orm import Session
+
+from server.app.auth import get_current_user
 from server.app.database import get_db
 from server.app.models import User
-from server.app.schemas import HistoryResponse, HistoryPoint
-from server.app.auth import get_current_user
+from server.app.schemas import HistoryPoint, HistoryResponse
 
 router = APIRouter(prefix="/api/history", tags=["Historical Telemetry"])
 
-BUCKET_SECONDS = {
-    "1m": 60,
-    "5m": 300,
-    "1h": 3600
-}
+BUCKET_SECONDS = {"1m": 60, "5m": 300, "1h": 3600}
+
 
 @router.get("", response_model=HistoryResponse)
 def get_historical_telemetry(
     tag: str = Query(..., description="Tag name to query"),
-    from_ts: Optional[datetime] = Query(None, alias="from", description="Start timestamp (ISO-8601)"),
+    from_ts: Optional[datetime] = Query(
+        None, alias="from", description="Start timestamp (ISO-8601)"
+    ),
     to_ts: Optional[datetime] = Query(None, alias="to", description="End timestamp (ISO-8601)"),
-    bucket: str = Query("raw", pattern="^(raw|1m|5m|1h)$", description="Downsampling bucket (raw, 1m, 5m, 1h)"),
+    bucket: str = Query(
+        "raw", pattern="^(raw|1m|5m|1h)$", description="Downsampling bucket (raw, 1m, 5m, 1h)"
+    ),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     """
     Retrieves time-series data for a specific tag.
@@ -44,7 +48,7 @@ def get_historical_telemetry(
     if from_ts > to_ts:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="'from' timestamp must be before 'to' timestamp."
+            detail="'from' timestamp must be before 'to' timestamp.",
         )
 
     dialect = db.bind.dialect.name if db.bind else "mysql"
@@ -64,14 +68,14 @@ def get_historical_telemetry(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Requested time range returned more than 5000 raw points. "
-                       "Please select a bucket aggregation (e.g. 1m, 5m, or 1h) or narrow the time range."
+                "Please select a bucket aggregation (e.g. 1m, 5m, or 1h) or narrow the time range.",
             )
 
         points = [
             HistoryPoint(
                 ts=r[0] if isinstance(r[0], datetime) else datetime.fromisoformat(str(r[0])),
                 value=round(float(r[1]), 3),
-                count=1
+                count=1,
             )
             for r in result
         ]
@@ -80,7 +84,7 @@ def get_historical_telemetry(
         sec = BUCKET_SECONDS[bucket]
         if dialect == "mysql":
             query_sql = text("""
-                SELECT 
+                SELECT
                     FROM_UNIXTIME(FLOOR(UNIX_TIMESTAMP(ts) / :sec) * :sec) AS b_ts,
                     AVG(value) AS avg_val,
                     MIN(value) AS min_val,
@@ -96,7 +100,7 @@ def get_historical_telemetry(
         else:
             # SQLite fallback for test environments
             query_sql = text("""
-                SELECT 
+                SELECT
                     datetime((strftime('%s', ts) / :sec) * :sec, 'unixepoch') AS b_ts,
                     AVG(value) AS avg_val,
                     MIN(value) AS min_val,
@@ -116,7 +120,7 @@ def get_historical_telemetry(
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Requested range with bucket '{bucket}' returned more than 5000 points. "
-                       f"Please select a larger bucket size (e.g. 5m or 1h) or narrow the query range."
+                f"Please select a larger bucket size (e.g. 5m or 1h) or narrow the query range.",
             )
 
         points = []
@@ -124,19 +128,16 @@ def get_historical_telemetry(
             ts_val = r[0]
             if isinstance(ts_val, str):
                 ts_val = datetime.fromisoformat(ts_val)
-            points.append(HistoryPoint(
-                ts=ts_val,
-                value=round(float(r[1]), 3),
-                min_value=round(float(r[2]), 3),
-                max_value=round(float(r[3]), 3),
-                count=int(r[4])
-            ))
+            points.append(
+                HistoryPoint(
+                    ts=ts_val,
+                    value=round(float(r[1]), 3),
+                    min_value=round(float(r[2]), 3),
+                    max_value=round(float(r[3]), 3),
+                    count=int(r[4]),
+                )
+            )
 
     return HistoryResponse(
-        tag=tag,
-        bucket=bucket,
-        from_ts=from_ts,
-        to_ts=to_ts,
-        count=len(points),
-        points=points
+        tag=tag, bucket=bucket, from_ts=from_ts, to_ts=to_ts, count=len(points), points=points
     )

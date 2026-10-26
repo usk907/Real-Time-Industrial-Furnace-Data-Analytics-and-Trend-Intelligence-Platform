@@ -2,6 +2,7 @@
 Exports tag metadata from generator/tags.py to server/app/tag_meta.json
 Ensures Part 1 (generator) and Part 2 (server) remain decoupled while sharing metadata.
 """
+
 import json
 import sys
 from pathlib import Path

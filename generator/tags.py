@@ -2,7 +2,8 @@
 Industrial Energy Intelligence Platform (IEIP)
 Tag Dictionary - Exactly 60 industrial furnace, power, rolling mill & water treatment tags.
 """
-from typing import List, Dict, Any
+
+from typing import Any, Dict, List
 
 TAGS: List[Dict[str, Any]] = [
     # =========================================================================
@@ -158,7 +159,6 @@ TAGS: List[Dict[str, Any]] = [
         "step": 11.6,
         "cumulative": True,
     },
-
     # =========================================================================
     # Group 2: Ladle Refining Furnace 2 (LRF-2) - 15 Tags
     # =========================================================================
@@ -312,7 +312,6 @@ TAGS: List[Dict[str, Any]] = [
         "step": 4.1,
         "cumulative": True,
     },
-
     # =========================================================================
     # Group 3: Main Substation & Step-Down Transformers - 15 Tags
     # =========================================================================
@@ -466,7 +465,6 @@ TAGS: List[Dict[str, Any]] = [
         "step": 17.0,
         "cumulative": True,
     },
-
     # =========================================================================
     # Group 4: Hot Rolling Mill (RM-1) - 8 Tags
     # =========================================================================
@@ -550,7 +548,6 @@ TAGS: List[Dict[str, Any]] = [
         "step": 3.8,
         "cumulative": True,
     },
-
     # =========================================================================
     # Group 5: Industrial Water Treatment & Utilities (WTP-1) - 7 Tags
     # =========================================================================

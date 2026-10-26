@@ -1,27 +1,28 @@
 """
 Tests for /api/live endpoint verifying 60 tags joined with metadata.
 """
-import pytest
+
 from datetime import datetime
+
+import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from server.app.main import app
 from server.app.auth import create_access_token
-from server.app.models import FurnaceLatest, User
 from server.app.database import Base, get_db
+from server.app.main import app
+from server.app.models import FurnaceLatest, User
 from server.app.routers.live import get_tag_metadata
 
 # Isolated test database
 test_engine = create_engine(
-    "sqlite:///:memory:",
-    connect_args={"check_same_thread": False},
-    poolclass=StaticPool
+    "sqlite:///:memory:", connect_args={"check_same_thread": False}, poolclass=StaticPool
 )
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 Base.metadata.create_all(bind=test_engine)
+
 
 def override_get_db():
     db = TestingSessionLocal()
@@ -30,6 +31,7 @@ def override_get_db():
     finally:
         db.close()
 
+
 @pytest.fixture(autouse=True)
 def setup_live_db():
     Base.metadata.create_all(bind=test_engine)
@@ -37,7 +39,9 @@ def setup_live_db():
     yield
     app.dependency_overrides.pop(get_db, None)
 
+
 client = TestClient(app)
+
 
 def test_live_telemetry_returns_60_tags():
     Base.metadata.create_all(bind=test_engine)
@@ -53,11 +57,7 @@ def test_live_telemetry_returns_60_tags():
 
         # Seed all 60 tags in furnace_latest
         for tag_name, meta in meta_map.items():
-            db.add(FurnaceLatest(
-                tag=tag_name,
-                value=float(meta["start"]),
-                ts=now
-            ))
+            db.add(FurnaceLatest(tag=tag_name, value=float(meta["start"]), ts=now))
         db.commit()
     finally:
         db.close()
@@ -81,6 +81,7 @@ def test_live_telemetry_returns_60_tags():
     assert "status" in first_tag
     assert "ts" in first_tag
     assert "equipment" in first_tag
+
 
 if __name__ == "__main__":
     pytest.main(["-v", __file__])

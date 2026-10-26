@@ -2,18 +2,19 @@
 WebSocket Telemetry Streaming Endpoint
 Validates JWT on handshake, subscribes connection to broadcaster, and handles lifecycle.
 """
+
 from typing import Optional
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Query
+
+from fastapi import APIRouter, Query, WebSocket, WebSocketDisconnect
+
 from server.app.auth import decode_access_token
 from server.app.services.broadcaster import broadcaster
 
 router = APIRouter(tags=["WebSocket"])
 
+
 @router.websocket("/api/ws")
-async def websocket_telemetry_stream(
-    websocket: WebSocket,
-    token: Optional[str] = Query(None)
-):
+async def websocket_telemetry_stream(websocket: WebSocket, token: Optional[str] = Query(None)):
     """
     Real-time SCADA telemetry push via WebSocket.
     Authenticates token query parameter; rejects invalid tokens with custom close code 4401.

@@ -2,10 +2,13 @@
 Integration test for live MySQL database connection on port 3307.
 Marked with @pytest.mark.live_db and gracefully skips if MySQL is offline.
 """
+
 import os
 import re
-import pytest
 from pathlib import Path
+
+import pytest
+
 
 def get_mysql_credentials():
     """Extracts DB credentials from server/.env, generator/.env or environment."""
@@ -21,7 +24,9 @@ def get_mysql_credentials():
 
     if server_env.exists() and (not user or not password):
         content = server_env.read_text(encoding="utf-8")
-        match = re.search(r"DATABASE_URL=mysql\+pymysql://([^:]+):([^@]+)@([^:/]+):?(\d+)?/([^\s]+)", content)
+        match = re.search(
+            r"DATABASE_URL=mysql\+pymysql://([^:]+):([^@]+)@([^:/]+):?(\d+)?/([^\s]+)", content
+        )
         if match:
             user = match.group(1)
             password = match.group(2)
@@ -41,6 +46,7 @@ def get_mysql_credentials():
 
     return host, port, user, password, database
 
+
 @pytest.mark.live_db
 def test_live_mysql_connection():
     """Connects to live MySQL database on port 3307 and verifies table connectivity."""
@@ -56,12 +62,7 @@ def test_live_mysql_connection():
 
     try:
         conn = pymysql.connect(
-            host=host,
-            port=port,
-            user=user,
-            password=password,
-            database=database,
-            connect_timeout=2
+            host=host, port=port, user=user, password=password, database=database, connect_timeout=2
         )
     except Exception as exc:
         pytest.skip(f"Live MySQL database offline on {host}:{port}: {exc}")
@@ -74,7 +75,11 @@ def test_live_mysql_connection():
 
             cursor.execute("SHOW TABLES;")
             tables = [r[0] for r in cursor.fetchall()]
-            assert "furnace_latest" in tables, "Expected 'furnace_latest' table to exist in furnace_db"
-            assert "furnace_readings" in tables, "Expected 'furnace_readings' table to exist in furnace_db"
+            assert "furnace_latest" in tables, (
+                "Expected 'furnace_latest' table to exist in furnace_db"
+            )
+            assert "furnace_readings" in tables, (
+                "Expected 'furnace_readings' table to exist in furnace_db"
+            )
     finally:
         conn.close()

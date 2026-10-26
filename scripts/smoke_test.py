@@ -3,17 +3,19 @@ End-to-End Smoke Test
 Verifies live pipeline: Generator -> MySQL -> Server (/api/live) within 3 seconds.
 Run while generator and server are actively running.
 """
+
 import os
 import sys
 import time
+
 import requests
-from datetime import datetime
 
 SERVER_URL = os.getenv("SERVER_URL", "http://127.0.0.1:8000")
 ADMIN_USER = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASS = os.getenv("ADMIN_PASSWORD")
 if not ADMIN_PASS:
     from pathlib import Path
+
     _env_file = Path(__file__).resolve().parent.parent / "server" / ".env"
     if _env_file.exists():
         for _line in _env_file.read_text(encoding="utf-8").splitlines():
@@ -22,6 +24,7 @@ if not ADMIN_PASS:
                 break
 if not ADMIN_PASS:
     raise ValueError("ADMIN_PASSWORD must be configured in environment or server/.env")
+
 
 def run_smoke_test():
     print("=" * 70)
@@ -34,7 +37,9 @@ def run_smoke_test():
         r_health = requests.get(f"{SERVER_URL}/api/health", timeout=3.0)
         assert r_health.status_code == 200, f"Health check failed: {r_health.status_code}"
         health_data = r_health.json()
-        print(f"[1/4] Health Check: OK (DB Status: {'CONNECTED' if health_data.get('db_ok') else 'OFFLINE'})")
+        print(
+            f"[1/4] Health Check: OK (DB Status: {'CONNECTED' if health_data.get('db_ok') else 'OFFLINE'})"
+        )
         assert health_data.get("db_ok"), "Database check reported db_ok=False"
     except Exception as e:
         print(f"[FAIL]: Server unreachable at {SERVER_URL}/api/health: {e}")
@@ -45,7 +50,7 @@ def run_smoke_test():
         r_login = requests.post(
             f"{SERVER_URL}/api/auth/login",
             json={"username": ADMIN_USER, "password": ADMIN_PASS},
-            timeout=3.0
+            timeout=3.0,
         )
         assert r_login.status_code == 200, f"Login failed: {r_login.text}"
         token = r_login.json()["access_token"]
@@ -83,17 +88,22 @@ def run_smoke_test():
             current_ts = tags2[sample_tag]["ts"]
             if current_ts != initial_ts or current_val != initial_val:
                 elapsed = round(time.time() - start_wait, 2)
-                print(f"[SUCCESS] Telemetry updated in {elapsed}s: {sample_tag} -> {current_val} (ts: {current_ts})")
+                print(
+                    f"[SUCCESS] Telemetry updated in {elapsed}s: {sample_tag} -> {current_val} (ts: {current_ts})"
+                )
                 updated = True
                 break
 
     if not updated:
-        print("[FAIL]: No telemetry update received within 3 seconds. Is generator.py actively running?")
+        print(
+            "[FAIL]: No telemetry update received within 3 seconds. Is generator.py actively running?"
+        )
         sys.exit(1)
 
     print("=" * 70)
     print("      ALL SMOKE CHECKS PASSED: Generator -> MySQL -> /api/live OK")
     print("=" * 70)
+
 
 if __name__ == "__main__":
     run_smoke_test()

@@ -5,12 +5,14 @@ Part 1: Fake Furnace Data Generator
 Continuously generates realistic SCADA telemetry for 60 industrial furnace tags
 and writes to MySQL tables 'furnace_readings' and 'furnace_latest' in atomic transactions.
 """
+
 import os
+import random
 import sys
 import time
-import random
 from datetime import datetime
 from pathlib import Path
+
 import pymysql
 from dotenv import load_dotenv
 
@@ -27,7 +29,12 @@ DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_PORT = int(os.getenv("DB_PORT", "3307"))
 DB_USER = os.getenv("DB_USER", "generator_user")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
-if not DB_PASSWORD or "<your_" in DB_PASSWORD.lower() or "placeholder" in DB_PASSWORD.lower() or "replace_with" in DB_PASSWORD.lower():
+if (
+    not DB_PASSWORD
+    or "<your_" in DB_PASSWORD.lower()
+    or "placeholder" in DB_PASSWORD.lower()
+    or "replace_with" in DB_PASSWORD.lower()
+):
     raise ValueError(
         "Refusing to start: DB_PASSWORD is missing or set to a placeholder in generator/.env. "
         "Please configure a valid database password."
@@ -35,6 +42,7 @@ if not DB_PASSWORD or "<your_" in DB_PASSWORD.lower() or "placeholder" in DB_PAS
 DB_NAME = os.getenv("DB_NAME", "furnace_db")
 GEN_INTERVAL_SECONDS = float(os.getenv("GEN_INTERVAL_SECONDS", "1.0"))
 LOG_INTERVAL_TICKS = int(os.getenv("LOG_INTERVAL_TICKS", "10"))
+
 
 class FurnaceDataGenerator:
     def __init__(self):
@@ -62,12 +70,16 @@ class FurnaceDataGenerator:
                     database=DB_NAME,
                     autocommit=False,
                     charset="utf8mb4",
-                    connect_timeout=5
+                    connect_timeout=5,
                 )
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Connected to MySQL ({DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME})")
+                print(
+                    f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Connected to MySQL ({DB_USER}@{DB_HOST}:{DB_PORT}/{DB_NAME})"
+                )
                 return self.conn
             except Exception as e:
-                print(f"[RECONNECT ERROR]: Cannot connect to MySQL at {DB_HOST}:{DB_PORT}. Retrying in 2 seconds... ({e})")
+                print(
+                    f"[RECONNECT ERROR]: Cannot connect to MySQL at {DB_HOST}:{DB_PORT}. Retrying in 2 seconds... ({e})"
+                )
                 time.sleep(2.0)
 
     def load_latest_state(self):
@@ -83,11 +95,17 @@ class FurnaceDataGenerator:
                         self.state[tag_name] = float(val)
                         loaded += 1
                 if loaded > 0:
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Restored {loaded} tag states from furnace_latest (cumulative kWh preserved).")
+                    print(
+                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] Restored {loaded} tag states from furnace_latest (cumulative kWh preserved)."
+                    )
                 else:
-                    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] No previous state found in furnace_latest. Initialized with starting values.")
+                    print(
+                        f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] No previous state found in furnace_latest. Initialized with starting values."
+                    )
         except Exception as e:
-            print(f"[STATE WARNING]: Could not load latest values from furnace_latest: {e}. Using default values.")
+            print(
+                f"[STATE WARNING]: Could not load latest values from furnace_latest: {e}. Using default values."
+            )
 
     def advance_state(self):
         """Advances bounded random walks for all 60 tags and handles anomaly injection."""
@@ -98,8 +116,10 @@ class FurnaceDataGenerator:
         # Roughly 1 in 500 ticks, inject an alarm breach into a non-cumulative tag
         if self.tick_count % 500 == 0:
             target_candidates = [
-                t for t in TAGS 
-                if not t.get("cumulative") and ("Temp" in t["name"] or "Power" in t["name"] or "Pressure" in t["name"])
+                t
+                for t in TAGS
+                if not t.get("cumulative")
+                and ("Temp" in t["name"] or "Power" in t["name"] or "Pressure" in t["name"])
             ]
             if target_candidates:
                 chosen = random.choice(target_candidates)
@@ -114,7 +134,9 @@ class FurnaceDataGenerator:
 
             if name == anomaly_tag and anomaly_val is not None:
                 self.state[name] = anomaly_val
-                print(f"[{datetime.now().strftime('%H:%M:%S')}] [ANOMALY INJECTED] {name} spiked to {anomaly_val} {tag['unit']} (Max: {tag['max']})")
+                print(
+                    f"[{datetime.now().strftime('%H:%M:%S')}] [ANOMALY INJECTED] {name} spiked to {anomaly_val} {tag['unit']} (Max: {tag['max']})"
+                )
                 continue
 
             if is_cumulative:
@@ -155,15 +177,13 @@ class FurnaceDataGenerator:
             with conn.cursor() as cursor:
                 # 1. Insert time-series historical records
                 insert_readings_sql = (
-                    "INSERT INTO furnace_readings (ts, tag, value, quality) "
-                    "VALUES (%s, %s, %s, %s)"
+                    "INSERT INTO furnace_readings (ts, tag, value, quality) VALUES (%s, %s, %s, %s)"
                 )
                 cursor.executemany(insert_readings_sql, readings_batch)
 
                 # 2. Update real-time latest cache table
                 replace_latest_sql = (
-                    "REPLACE INTO furnace_latest (tag, value, ts) "
-                    "VALUES (%s, %s, %s)"
+                    "REPLACE INTO furnace_latest (tag, value, ts) VALUES (%s, %s, %s)"
                 )
                 cursor.executemany(replace_latest_sql, latest_batch)
 
@@ -181,7 +201,9 @@ class FurnaceDataGenerator:
 
     def run(self, max_ticks: int = None):
         """Continuous execution loop."""
-        print(f"IEIP Furnace Data Generator started. Interval: {GEN_INTERVAL_SECONDS}s, Tags: {len(TAGS)}")
+        print(
+            f"IEIP Furnace Data Generator started. Interval: {GEN_INTERVAL_SECONDS}s, Tags: {len(TAGS)}"
+        )
         print("Press Ctrl+C to stop.")
         self.load_latest_state()
         ticks_done = 0
@@ -206,6 +228,7 @@ class FurnaceDataGenerator:
                     self.conn.close()
                 except Exception:
                     pass
+
 
 if __name__ == "__main__":
     max_ticks = None

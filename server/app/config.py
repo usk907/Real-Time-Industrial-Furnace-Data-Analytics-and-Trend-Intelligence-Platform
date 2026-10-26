@@ -2,10 +2,12 @@
 Server Configuration
 Loaded from server/.env via Pydantic BaseSettings.
 """
-from typing import List, Union
-from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+
 from pathlib import Path
+from typing import List, Union
+
+from pydantic import field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 ENV_PATH = Path(__file__).resolve().parent.parent / ".env"
 
@@ -17,7 +19,7 @@ PLACEHOLDER_SECRETS = {
     "change_me_super_secret",
     "replace_with_secure_random_key",
     "your_jwt_secret_key_here",
-    "replace_with_secure_jwt_secret"
+    "replace_with_secure_jwt_secret",
 }
 
 PLACEHOLDER_PASSWORDS = {
@@ -26,14 +28,15 @@ PLACEHOLDER_PASSWORDS = {
     "admin123",
     "password",
     "replace_with_secure_password",
-    "admin_password_here"
+    "admin_password_here",
 }
+
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=str(ENV_PATH) if ENV_PATH.exists() else ".env",
         env_file_encoding="utf-8",
-        extra="ignore"
+        extra="ignore",
     )
 
     DATABASE_URL: str
@@ -100,5 +103,6 @@ class Settings(BaseSettings):
         if isinstance(self.CORS_ORIGINS, list):
             return self.CORS_ORIGINS
         return [o.strip() for o in self.CORS_ORIGINS.split(",") if o.strip()]
+
 
 settings = Settings()
