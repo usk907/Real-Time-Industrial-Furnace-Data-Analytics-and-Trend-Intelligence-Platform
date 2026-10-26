@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify({ email }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -58,12 +58,14 @@ export const Login: React.FC = () => {
         {/* Card 1: Banner Context */}
         <div className="bg-gradient-to-br from-[#101730] to-[#0E101F] p-10 flex flex-col justify-between border-r border-[#1F2942]/40 relative">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-blue-900/10 via-transparent to-transparent pointer-events-none" />
-          
+
           <div className="flex items-center gap-3 relative z-10">
             <Shield className="h-8 w-8 text-cyan-400" />
             <div>
               <h1 className="font-black text-sm tracking-widest text-white">IEIP ENTERPRISE</h1>
-              <p className="text-[9px] text-[#556994] font-bold uppercase tracking-widest">Energy Intelligence</p>
+              <p className="text-[9px] text-[#556994] font-bold uppercase tracking-widest">
+                Energy Intelligence
+              </p>
             </div>
           </div>
 
@@ -72,16 +74,23 @@ export const Login: React.FC = () => {
               SCADA Analytics & prediction controls.
             </h2>
             <p className="text-xs text-slate-400 mt-3 leading-relaxed">
-              Real-time monitoring, AI forecasting models, and energy consumption rollups for industrial melt shops.
+              Real-time monitoring, AI forecasting models, and energy consumption rollups for
+              industrial melt shops.
             </p>
           </div>
 
           {/* Seed credentials guide box */}
           <div className="p-4 bg-[#141C38]/60 border border-blue-500/20 rounded-2xl relative z-10 text-xs">
-            <p className="font-bold text-cyan-400 uppercase tracking-wider text-[10px] mb-2">Seed credentials for verification</p>
+            <p className="font-bold text-cyan-400 uppercase tracking-wider text-[10px] mb-2">
+              Seed credentials for verification
+            </p>
             <div className="space-y-1 text-slate-300 font-mono text-[11px]">
-              <p>Username: <span className="text-white font-bold">admin</span></p>
-              <p>Password: <span className="text-white font-bold">admin123</span></p>
+              <p>
+                Username: <span className="text-white font-bold">admin</span>
+              </p>
+              <p>
+                Password: <span className="text-white font-bold">admin123</span>
+              </p>
             </div>
             <p className="text-[10px] text-slate-500 mt-2 italic">Role: Admin privileges</p>
           </div>
@@ -101,10 +110,12 @@ export const Login: React.FC = () => {
             )}
 
             <div>
-              <label className="block text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-2">Username</label>
+              <label className="block text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-2">
+                Username
+              </label>
               <div className="relative">
                 <User className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-500" />
-                <input 
+                <input
                   type="text"
                   required
                   placeholder="Enter username"
@@ -116,10 +127,12 @@ export const Login: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-2">Password</label>
+              <label className="block text-slate-400 text-[11px] font-bold uppercase tracking-wider mb-2">
+                Password
+              </label>
               <div className="relative">
                 <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-500" />
-                <input 
+                <input
                   type="password"
                   required
                   placeholder="••••••••"
@@ -135,7 +148,7 @@ export const Login: React.FC = () => {
               disabled={loading}
               className="w-full bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-700 hover:to-cyan-600 text-white font-extrabold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-600/20 text-xs uppercase tracking-wider transition-all duration-300 disabled:opacity-50 mt-2"
             >
-              {loading ? "Authenticating..." : "Sign In to Console"}
+              {loading ? 'Authenticating...' : 'Sign In to Console'}
             </button>
           </form>
 
@@ -148,7 +161,10 @@ export const Login: React.FC = () => {
           </button>
 
           {showForgot && (
-            <form onSubmit={handleForgotPassword} className="mt-4 space-y-3 rounded-2xl border border-[#1F2942]/50 bg-[#0D1227] p-4">
+            <form
+              onSubmit={handleForgotPassword}
+              className="mt-4 space-y-3 rounded-2xl border border-[#1F2942]/50 bg-[#0D1227] p-4"
+            >
               <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
                 <Mail className="h-4 w-4 text-cyan-400" />
                 Request reset link

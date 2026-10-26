@@ -138,4 +138,3 @@ export interface HistoryResponse {
   count: number;
   points: HistoryPoint[];
 }
-

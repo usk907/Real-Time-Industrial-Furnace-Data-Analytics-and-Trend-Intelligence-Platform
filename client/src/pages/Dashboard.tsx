@@ -1,12 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import * as echarts from 'echarts';
 import { useAuth } from '../context/AuthContext';
-import {
-  Zap,
-  AlertOctagon,
-  Activity,
-  Flame
-} from 'lucide-react';
+import { Zap, AlertOctagon, Activity, Flame } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 // Reusable ECharts Component
@@ -44,7 +39,7 @@ export const Dashboard: React.FC = () => {
     const fetchAlarmsCount = async () => {
       try {
         const res = await fetch('/api/alarms?active=true&limit=100', {
-          headers: { Authorization: `Bearer ${token}` }
+          headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
           const alarms = await res.json();
@@ -80,19 +75,19 @@ export const Dashboard: React.FC = () => {
     tooltip: { trigger: 'axis', backgroundColor: '#0F1424', borderColor: '#1F2942' },
     legend: {
       data: ['Grid Substation Import (kW)', 'Furnace Load Combined (kW)'],
-      textStyle: { color: '#9CA3AF', fontSize: 10 }
+      textStyle: { color: '#9CA3AF', fontSize: 10 },
     },
     grid: { left: '4%', right: '4%', bottom: '8%', top: '15%', containLabel: true },
     xAxis: {
       type: 'category',
       data: liveBuffer.time,
-      axisLabel: { color: '#9CA3AF', fontSize: 9 }
+      axisLabel: { color: '#9CA3AF', fontSize: 9 },
     },
     yAxis: {
       type: 'value',
       name: 'kW',
       axisLabel: { color: '#9CA3AF', fontSize: 9 },
-      splitLine: { lineStyle: { color: '#1F2942' } }
+      splitLine: { lineStyle: { color: '#1F2942' } },
     },
     series: [
       {
@@ -105,9 +100,9 @@ export const Dashboard: React.FC = () => {
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(59, 130, 246, 0.25)' },
-            { offset: 1, color: 'rgba(59, 130, 246, 0)' }
-          ])
-        }
+            { offset: 1, color: 'rgba(59, 130, 246, 0)' },
+          ]),
+        },
       },
       {
         name: 'Furnace Load Combined (kW)',
@@ -119,11 +114,11 @@ export const Dashboard: React.FC = () => {
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(6, 182, 212, 0.25)' },
-            { offset: 1, color: 'rgba(6, 182, 212, 0)' }
-          ])
-        }
-      }
-    ]
+            { offset: 1, color: 'rgba(6, 182, 212, 0)' },
+          ]),
+        },
+      },
+    ],
   };
 
   // Chart: Power Factor Gauge Options
@@ -145,16 +140,16 @@ export const Dashboard: React.FC = () => {
             color: [
               [0.5, '#EF4444'],
               [0.8, '#F59E0B'],
-              [1, '#10B981']
-            ]
-          }
+              [1, '#10B981'],
+            ],
+          },
         },
         pointer: {
           icon: 'path://M12.8,0.7l12,20.1c0.6,1,0.3,2.3-0.7,2.9c-0.4,0.2-0.8,0.3-1.2,0.3H0.9c-1.1,0-2-0.9-2-2c0-0.4,0.1-0.8,0.3-1.2l12-20.1C11.8-0.2,12.5-0.2,12.8,0.7z',
           length: '75%',
           width: 5,
           offsetCenter: [0, '5%'],
-          itemStyle: { color: '#ffffff' }
+          itemStyle: { color: '#ffffff' },
         },
         axisTick: { show: false },
         splitLine: { length: 8, lineStyle: { width: 2, color: '#9CA3AF' } },
@@ -165,11 +160,11 @@ export const Dashboard: React.FC = () => {
           offsetCenter: [0, '-10%'],
           valueAnimation: true,
           formatter: '{value}',
-          color: '#ffffff'
+          color: '#ffffff',
         },
-        data: [{ value: parseFloat(pf.toFixed(3)), name: 'Power Factor' }]
-      }
-    ]
+        data: [{ value: parseFloat(pf.toFixed(3)), name: 'Power Factor' }],
+      },
+    ],
   };
 
   return (
@@ -194,7 +189,9 @@ export const Dashboard: React.FC = () => {
           </div>
           <p className="mt-2 text-[10px] text-slate-400 flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span>TR-1 ({Math.round(tr1Power)} kW) + TR-2 ({Math.round(tr2Power)} kW)</span>
+            <span>
+              TR-1 ({Math.round(tr1Power)} kW) + TR-2 ({Math.round(tr2Power)} kW)
+            </span>
           </p>
         </div>
 
@@ -281,9 +278,7 @@ export const Dashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  connectionStatus === 'Connected'
-                    ? 'bg-emerald-400 animate-pulse'
-                    : 'bg-amber-400'
+                  connectionStatus === 'Connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
                 }`}
               />
               <span className="text-[10px] font-mono text-slate-300 uppercase">
@@ -318,7 +313,8 @@ export const Dashboard: React.FC = () => {
             <div className="flex justify-between items-center text-xs">
               <span className="text-slate-400">EAF-1 Energy:</span>
               <span className="font-bold text-cyan-400 font-mono">
-                {Math.round(liveTags['EAF1_Cumulative_Energy']?.value || 1284500).toLocaleString()} kWh
+                {Math.round(liveTags['EAF1_Cumulative_Energy']?.value || 1284500).toLocaleString()}{' '}
+                kWh
               </span>
             </div>
           </div>

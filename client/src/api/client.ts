@@ -12,7 +12,10 @@ export interface ApiRequestOptions extends RequestInit {
   token?: string | null;
 }
 
-export async function apiFetch<T = any>(endpoint: string, options: ApiRequestOptions = {}): Promise<T> {
+export async function apiFetch<T = any>(
+  endpoint: string,
+  options: ApiRequestOptions = {}
+): Promise<T> {
   const token = options.token !== undefined ? options.token : getAuthToken();
   const headers = new Headers(options.headers || {});
 
@@ -27,7 +30,7 @@ export async function apiFetch<T = any>(endpoint: string, options: ApiRequestOpt
 
   const response = await fetch(endpoint, {
     ...options,
-    headers
+    headers,
   });
 
   if (!response.ok) {
@@ -57,16 +60,16 @@ export const api = {
     apiFetch<T>(endpoint, {
       ...options,
       method: 'POST',
-      body: body instanceof FormData ? body : JSON.stringify(body)
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }),
 
   put: <T = any>(endpoint: string, body?: any, options?: ApiRequestOptions) =>
     apiFetch<T>(endpoint, {
       ...options,
       method: 'PUT',
-      body: body instanceof FormData ? body : JSON.stringify(body)
+      body: body instanceof FormData ? body : JSON.stringify(body),
     }),
 
   delete: <T = any>(endpoint: string, options?: ApiRequestOptions) =>
-    apiFetch<T>(endpoint, { ...options, method: 'DELETE' })
+    apiFetch<T>(endpoint, { ...options, method: 'DELETE' }),
 };

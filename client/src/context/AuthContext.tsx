@@ -22,14 +22,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return localStorage.getItem('token');
   });
   const [user, setUser] = useState<User | null>(null);
-  const [connectionStatus, setConnectionStatus] = useState<'Connected' | 'Connecting' | 'Disconnected'>('Disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<
+    'Connected' | 'Connecting' | 'Disconnected'
+  >('Disconnected');
   const [liveTags, setLiveTags] = useState<Record<string, TagLiveItem>>({});
   const [tagList, setTagList] = useState<TagLiveItem[]>([]);
   const [liveReadings, setLiveReadings] = useState<Record<string, TelemetryReading>>({});
   const [liveBuffer, setLiveBuffer] = useState<LiveBuffer>({
     time: [],
     importPower: [],
-    generationPower: []
+    generationPower: [],
   });
   const [authError, setAuthError] = useState<string | null>(null);
 
@@ -48,7 +50,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchProfile = async (authToken: string) => {
     try {
       const response = await fetch('/api/auth/me', {
-        headers: { Authorization: `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
       });
       if (response.ok) {
         const data = await response.json();
@@ -57,7 +59,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: data.username,
           email: `${data.username}@ieip-platform.com`,
           role: data.role,
-          permissions: []
+          permissions: [],
         });
         setAuthError(null);
       } else {
@@ -74,7 +76,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const fetchInitialLiveTelemetry = async (authToken: string) => {
     try {
       const res = await fetch('/api/live', {
-        headers: { Authorization: `Bearer ${authToken}` }
+        headers: { Authorization: `Bearer ${authToken}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -94,14 +96,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     let importKw = 0;
     let genKw = 0;
 
-    tags.forEach(t => {
+    tags.forEach((t) => {
       tagMap[t.tag] = t;
       legacyReadings[t.tag] = {
         name: t.tag,
         value: t.value,
         unit: t.unit,
         status: t.status,
-        quality: 'GOOD'
+        quality: 'GOOD',
       };
 
       if (t.tag.includes('Power') || t.tag.includes('Active_Power')) {
@@ -120,10 +122,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const timeLabel = new Date(ts).toLocaleTimeString([], {
       hour: '2-digit',
       minute: '2-digit',
-      second: '2-digit'
+      second: '2-digit',
     });
 
-    setLiveBuffer(prev => {
+    setLiveBuffer((prev) => {
       const nextTime = [...prev.time, timeLabel].slice(-30);
       const nextImport = [...prev.importPower, Math.round(importKw)].slice(-30);
       const nextGen = [...prev.generationPower, Math.round(genKw)].slice(-30);
@@ -160,7 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           backoffRef.current = 1000; // Reset backoff on successful connection
         };
 
-        ws.onmessage = event => {
+        ws.onmessage = (event) => {
           if (!isMounted) return;
           try {
             const data = JSON.parse(event.data);
@@ -172,7 +174,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         };
 
-        ws.onclose = event => {
+        ws.onclose = (event) => {
           if (!isMounted) return;
           setConnectionStatus('Disconnected');
           wsRef.current = null;
@@ -224,7 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ username, password }),
       });
       if (response.ok) {
         const data = await response.json();
@@ -235,7 +237,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           username: data.username,
           email: `${data.username}@ieip-platform.com`,
           role: data.role,
-          permissions: []
+          permissions: [],
         });
         await fetchProfile(data.access_token);
         await fetchInitialLiveTelemetry(data.access_token);
@@ -274,7 +276,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         tagList,
         liveReadings,
         liveBuffer,
-        authError
+        authError,
       }}
     >
       {children}

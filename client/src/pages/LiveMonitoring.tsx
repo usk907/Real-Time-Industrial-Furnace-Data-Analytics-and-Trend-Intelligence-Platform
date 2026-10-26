@@ -13,12 +13,11 @@ export const LiveMonitoring: React.FC = () => {
     'Ladle Refining Furnace 2',
     'Main Substation',
     'Hot Rolling Mill',
-    'Water Treatment & Utilities'
+    'Water Treatment & Utilities',
   ];
 
-  const filteredTags = tagList.filter(tag => {
-    const matchesEquipment =
-      selectedEquipment === 'ALL' || tag.equipment === selectedEquipment;
+  const filteredTags = tagList.filter((tag) => {
+    const matchesEquipment = selectedEquipment === 'ALL' || tag.equipment === selectedEquipment;
     const matchesSearch =
       !searchQuery.trim() ||
       tag.tag.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -45,7 +44,7 @@ export const LiveMonitoring: React.FC = () => {
               type="text"
               placeholder="Search tags or units..."
               value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="px-3 py-1.5 rounded-xl bg-[#10162B] border border-[#1F2B50] text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-500"
             />
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#10162B] border border-[#1F2B50]">
@@ -63,7 +62,7 @@ export const LiveMonitoring: React.FC = () => {
 
         {/* Filter Pills */}
         <div className="flex flex-wrap gap-2 mt-5 pt-4 border-t border-[#1F2B50]/60">
-          {equipmentList.map(eq => (
+          {equipmentList.map((eq) => (
             <button
               key={eq}
               onClick={() => setSelectedEquipment(eq)}
@@ -87,7 +86,7 @@ export const LiveMonitoring: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-          {filteredTags.map(tag => {
+          {filteredTags.map((tag) => {
             const isCritical = tag.status === 'CRITICAL';
             const isWarning = tag.status === 'WARNING';
 
@@ -98,8 +97,8 @@ export const LiveMonitoring: React.FC = () => {
                   isCritical
                     ? 'border-red-500/80 bg-red-950/10'
                     : isWarning
-                    ? 'border-amber-500/70 bg-amber-950/10'
-                    : 'border-[#1F2B50] hover:border-cyan-500/50'
+                      ? 'border-amber-500/70 bg-amber-950/10'
+                      : 'border-[#1F2B50] hover:border-cyan-500/50'
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
@@ -107,7 +106,10 @@ export const LiveMonitoring: React.FC = () => {
                     <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 truncate">
                       {tag.equipment || 'General Plant'}
                     </p>
-                    <h4 className="text-xs font-extrabold text-white truncate mt-0.5" title={tag.tag}>
+                    <h4
+                      className="text-xs font-extrabold text-white truncate mt-0.5"
+                      title={tag.tag}
+                    >
                       {tag.tag}
                     </h4>
                   </div>
@@ -116,8 +118,8 @@ export const LiveMonitoring: React.FC = () => {
                       isCritical
                         ? 'bg-red-500 text-white animate-pulse'
                         : isWarning
-                        ? 'bg-amber-500/20 text-amber-400'
-                        : 'bg-emerald-500/10 text-emerald-400'
+                          ? 'bg-amber-500/20 text-amber-400'
+                          : 'bg-emerald-500/10 text-emerald-400'
                     }`}
                   >
                     {tag.status}

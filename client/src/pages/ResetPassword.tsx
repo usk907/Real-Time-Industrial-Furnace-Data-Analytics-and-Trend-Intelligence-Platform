@@ -38,7 +38,7 @@ export const ResetPassword: React.FC = () => {
       const res = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, new_password: password })
+        body: JSON.stringify({ token, new_password: password }),
       });
 
       const data = await res.json();
@@ -64,7 +64,9 @@ export const ResetPassword: React.FC = () => {
           <Shield className="h-8 w-8 text-cyan-400" />
           <div>
             <h1 className="text-lg font-black uppercase tracking-widest">Reset Password</h1>
-            <p className="text-[11px] uppercase tracking-wider text-slate-500">Set a new credential for your account</p>
+            <p className="text-[11px] uppercase tracking-wider text-slate-500">
+              Set a new credential for your account
+            </p>
           </div>
         </div>
 
@@ -84,7 +86,9 @@ export const ResetPassword: React.FC = () => {
           )}
 
           <div>
-            <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-400">New Password</label>
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              New Password
+            </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-500" />
               <input
@@ -99,7 +103,9 @@ export const ResetPassword: React.FC = () => {
           </div>
 
           <div>
-            <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-400">Confirm Password</label>
+            <label className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Confirm Password
+            </label>
             <div className="relative">
               <Lock className="absolute left-3.5 top-3.5 h-4.5 w-4.5 text-slate-500" />
               <input
@@ -122,7 +128,10 @@ export const ResetPassword: React.FC = () => {
           </button>
         </form>
 
-        <Link to="/login" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300">
+        <Link
+          to="/login"
+          className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-400 hover:text-cyan-300"
+        >
           <ArrowLeft className="h-4 w-4" />
           Back to login
         </Link>

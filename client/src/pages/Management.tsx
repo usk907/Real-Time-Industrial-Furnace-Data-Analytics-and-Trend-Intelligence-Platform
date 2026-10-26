@@ -4,8 +4,10 @@ import { Plus, Edit2, Trash2, Shield, Users, Layers, Layout, AlertCircle } from 
 
 export const Management: React.FC = () => {
   const { token, user } = useAuth();
-  const [activeSubTab, setActiveSubTab] = useState<'PLANTS' | 'DEPTS' | 'MACHINES' | 'DEVICES' | 'USERS'>('PLANTS');
-  
+  const [activeSubTab, setActiveSubTab] = useState<
+    'PLANTS' | 'DEPTS' | 'MACHINES' | 'DEVICES' | 'USERS'
+  >('PLANTS');
+
   // Entity states
   const [plants, setPlants] = useState<any[]>([]);
   const [depts, setDepts] = useState<any[]>([]);
@@ -20,11 +22,41 @@ export const Management: React.FC = () => {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   // Form Fields State
-  const [plantForm, setPlantForm] = useState({ name: '', location: '', timezone: 'EST', description: '', status: 'ACTIVE' });
+  const [plantForm, setPlantForm] = useState({
+    name: '',
+    location: '',
+    timezone: 'EST',
+    description: '',
+    status: 'ACTIVE',
+  });
   const [deptForm, setDeptForm] = useState({ plant_id: 1, name: '', description: '' });
-  const [machineForm, setMachineForm] = useState({ department_id: 1, name: '', type: 'SMS_SHOP', rated_capacity: 70000, status: 'STOPPED' });
-  const [deviceForm, setDeviceForm] = useState({ machine_id: 1, name: '', type: 'POWER', register_address: '30001', unit: 'kW', nominal_min: 0, nominal_max: 50000, serial_number: '', firmware_version: 'v1.0.0', communication_status: 'ONLINE', is_active: true });
-  const [userForm, setUserForm] = useState({ username: '', email: '', password: '', role_id: 2, is_active: true });
+  const [machineForm, setMachineForm] = useState({
+    department_id: 1,
+    name: '',
+    type: 'SMS_SHOP',
+    rated_capacity: 70000,
+    status: 'STOPPED',
+  });
+  const [deviceForm, setDeviceForm] = useState({
+    machine_id: 1,
+    name: '',
+    type: 'POWER',
+    register_address: '30001',
+    unit: 'kW',
+    nominal_min: 0,
+    nominal_max: 50000,
+    serial_number: '',
+    firmware_version: 'v1.0.0',
+    communication_status: 'ONLINE',
+    is_active: true,
+  });
+  const [userForm, setUserForm] = useState({
+    username: '',
+    email: '',
+    password: '',
+    role_id: 2,
+    is_active: true,
+  });
 
   useEffect(() => {
     fetchAll();
@@ -50,7 +82,9 @@ export const Management: React.FC = () => {
 
   const fetchDepts = async () => {
     try {
-      const res = await fetch('/api/departments', { headers: { Authorization: `Bearer ${token}` } });
+      const res = await fetch('/api/departments', {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       if (res.ok) setDepts(await res.json());
       else setDepts([]);
     } catch {
@@ -95,8 +129,26 @@ export const Management: React.FC = () => {
     // Reset forms
     setPlantForm({ name: '', location: '', timezone: 'EST', description: '', status: 'ACTIVE' });
     setDeptForm({ plant_id: plants[0]?.id || 1, name: '', description: '' });
-    setMachineForm({ department_id: depts[0]?.id || 1, name: '', type: 'SMS_SHOP', rated_capacity: 70000, status: 'STOPPED' });
-    setDeviceForm({ machine_id: machines[0]?.id || 1, name: '', type: 'POWER', register_address: '', unit: 'kW', nominal_min: 0, nominal_max: 50000, serial_number: '', firmware_version: 'v1.0.0', communication_status: 'ONLINE', is_active: true });
+    setMachineForm({
+      department_id: depts[0]?.id || 1,
+      name: '',
+      type: 'SMS_SHOP',
+      rated_capacity: 70000,
+      status: 'STOPPED',
+    });
+    setDeviceForm({
+      machine_id: machines[0]?.id || 1,
+      name: '',
+      type: 'POWER',
+      register_address: '',
+      unit: 'kW',
+      nominal_min: 0,
+      nominal_max: 50000,
+      serial_number: '',
+      firmware_version: 'v1.0.0',
+      communication_status: 'ONLINE',
+      is_active: true,
+    });
     setUserForm({ username: '', email: '', password: '', role_id: 2, is_active: true });
     setIsModalOpen(true);
   };
@@ -105,34 +157,78 @@ export const Management: React.FC = () => {
     setModalMode('EDIT');
     setEditId(item.id);
     setErrorMsg(null);
-    
-    if (activeSubTab === 'PLANTS') setPlantForm({ name: item.name, location: item.location || '', timezone: item.timezone || 'EST', description: item.description || '', status: item.status || 'ACTIVE' });
-    if (activeSubTab === 'DEPTS') setDeptForm({ plant_id: item.plant_id, name: item.name, description: item.description || '' });
-    if (activeSubTab === 'MACHINES') setMachineForm({ department_id: item.department_id, name: item.name, type: item.type, rated_capacity: item.rated_capacity, status: item.status });
-    if (activeSubTab === 'DEVICES') setDeviceForm({ machine_id: item.machine_id, name: item.name, type: item.type, register_address: item.register_address, unit: item.unit, nominal_min: item.nominal_min || 0, nominal_max: item.nominal_max || 50000, serial_number: item.serial_number || '', firmware_version: item.firmware_version || 'v1.0.0', communication_status: item.communication_status || 'ONLINE', is_active: item.is_active });
-    if (activeSubTab === 'USERS') setUserForm({ username: item.username, email: item.email, password: '', role_id: item.role_id, is_active: item.is_active });
-    
+
+    if (activeSubTab === 'PLANTS')
+      setPlantForm({
+        name: item.name,
+        location: item.location || '',
+        timezone: item.timezone || 'EST',
+        description: item.description || '',
+        status: item.status || 'ACTIVE',
+      });
+    if (activeSubTab === 'DEPTS')
+      setDeptForm({
+        plant_id: item.plant_id,
+        name: item.name,
+        description: item.description || '',
+      });
+    if (activeSubTab === 'MACHINES')
+      setMachineForm({
+        department_id: item.department_id,
+        name: item.name,
+        type: item.type,
+        rated_capacity: item.rated_capacity,
+        status: item.status,
+      });
+    if (activeSubTab === 'DEVICES')
+      setDeviceForm({
+        machine_id: item.machine_id,
+        name: item.name,
+        type: item.type,
+        register_address: item.register_address,
+        unit: item.unit,
+        nominal_min: item.nominal_min || 0,
+        nominal_max: item.nominal_max || 50000,
+        serial_number: item.serial_number || '',
+        firmware_version: item.firmware_version || 'v1.0.0',
+        communication_status: item.communication_status || 'ONLINE',
+        is_active: item.is_active,
+      });
+    if (activeSubTab === 'USERS')
+      setUserForm({
+        username: item.username,
+        email: item.email,
+        password: '',
+        role_id: item.role_id,
+        is_active: item.is_active,
+      });
+
     setIsModalOpen(true);
   };
 
   const handleDelete = async (id: number) => {
-    if (!confirm("Are you sure you want to delete this resource?")) return;
-    const endpoint = activeSubTab === 'PLANTS' ? `/api/plants/${id}`
-      : activeSubTab === 'DEPTS' ? `/api/departments/${id}`
-      : activeSubTab === 'MACHINES' ? `/api/machines/${id}`
-      : activeSubTab === 'DEVICES' ? `/api/devices/${id}`
-      : `/api/users/${id}`;
-      
+    if (!confirm('Are you sure you want to delete this resource?')) return;
+    const endpoint =
+      activeSubTab === 'PLANTS'
+        ? `/api/plants/${id}`
+        : activeSubTab === 'DEPTS'
+          ? `/api/departments/${id}`
+          : activeSubTab === 'MACHINES'
+            ? `/api/machines/${id}`
+            : activeSubTab === 'DEVICES'
+              ? `/api/devices/${id}`
+              : `/api/users/${id}`;
+
     try {
       const res = await fetch(endpoint, {
         method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         fetchAll();
       } else {
         const err = await res.json();
-        alert(err.detail || "Delete operation failed.");
+        alert(err.detail || 'Delete operation failed.');
       }
     } catch (e) {
       console.error(e);
@@ -144,7 +240,7 @@ export const Management: React.FC = () => {
     setErrorMsg(null);
     let payload = {};
     let endpoint = '';
-    
+
     if (activeSubTab === 'PLANTS') {
       payload = plantForm;
       endpoint = modalMode === 'ADD' ? '/api/plants' : `/api/plants/${editId}`;
@@ -167,19 +263,19 @@ export const Management: React.FC = () => {
         method: modalMode === 'ADD' ? 'POST' : 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
       if (res.ok) {
         setIsModalOpen(false);
         fetchAll();
       } else {
         const data = await res.json();
-        setErrorMsg(data.detail || "Operation failed. Review input constraints.");
+        setErrorMsg(data.detail || 'Operation failed. Review input constraints.');
       }
     } catch (err) {
-      setErrorMsg("Server unreachable.");
+      setErrorMsg('Server unreachable.');
     }
   };
 
@@ -188,15 +284,14 @@ export const Management: React.FC = () => {
     { key: 'DEPTS', name: 'Departments', icon: Layers, adminOnly: false },
     { key: 'MACHINES', name: 'Machines', icon: Layout, adminOnly: false },
     { key: 'DEVICES', name: 'Devices', icon: Layout, adminOnly: false },
-    { key: 'USERS', name: 'User Accounts', icon: Users, adminOnly: true }
+    { key: 'USERS', name: 'User Accounts', icon: Users, adminOnly: true },
   ];
 
   return (
     <div className="space-y-6 animate-fade-in text-xs font-semibold">
-      
       {/* Tab Selectors */}
       <div className="flex flex-wrap gap-2 pb-2 border-b border-[#1F2942]/40">
-        {subTabs.map(tab => {
+        {subTabs.map((tab) => {
           if (tab.adminOnly && user?.role !== 'Admin') return null;
           const Icon = tab.icon;
           return (
@@ -221,7 +316,7 @@ export const Management: React.FC = () => {
           <h4 className="text-xs font-bold text-slate-300 uppercase tracking-widest">
             Manage {activeSubTab.toLowerCase()} entries
           </h4>
-          <button 
+          <button
             onClick={handleOpenAdd}
             className="bg-blue-600 hover:bg-blue-700 text-white font-extrabold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition"
           >
@@ -245,19 +340,35 @@ export const Management: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1F2942]/40">
-                {plants.map(p => (
+                {plants.map((p) => (
                   <tr key={p.id} className="hover:bg-[#151C36]/20 transition">
                     <td className="p-4 pl-6 font-mono text-[#556994]">#{p.id}</td>
                     <td className="p-4 font-bold text-slate-200">{p.name}</td>
                     <td className="p-4 text-slate-400">{p.location}</td>
                     <td className="p-4 text-slate-400 font-mono">{p.timezone}</td>
-                    <td className="p-4 text-slate-400 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">{p.description}</td>
+                    <td className="p-4 text-slate-400 max-w-xs overflow-hidden text-ellipsis whitespace-nowrap">
+                      {p.description}
+                    </td>
                     <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${p.status === 'ACTIVE' ? 'bg-emerald-950/20 text-emerald-400' : 'bg-red-950/20 text-red-400'}`}>{p.status}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold ${p.status === 'ACTIVE' ? 'bg-emerald-950/20 text-emerald-400' : 'bg-red-950/20 text-red-400'}`}
+                      >
+                        {p.status}
+                      </span>
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleOpenEdit(p)} className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button
+                        onClick={() => handleOpenEdit(p)}
+                        className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(p.id)}
+                        className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -277,15 +388,27 @@ export const Management: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1F2942]/40">
-                {depts.map(d => (
+                {depts.map((d) => (
                   <tr key={d.id} className="hover:bg-[#151C36]/20 transition">
                     <td className="p-4 pl-6 font-mono text-[#556994]">#{d.id}</td>
                     <td className="p-4 font-bold text-slate-200">{d.name}</td>
                     <td className="p-4 text-slate-400 font-mono">#{d.plant_id}</td>
-                    <td className="p-4 text-slate-400 max-w-xs overflow-hidden text-ellipsis">{d.description}</td>
+                    <td className="p-4 text-slate-400 max-w-xs overflow-hidden text-ellipsis">
+                      {d.description}
+                    </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleOpenEdit(d)} className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(d.id)} className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button
+                        onClick={() => handleOpenEdit(d)}
+                        className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(d.id)}
+                        className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -306,18 +429,34 @@ export const Management: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1F2942]/40">
-                {machines.map(m => (
+                {machines.map((m) => (
                   <tr key={m.id} className="hover:bg-[#151C36]/20 transition">
                     <td className="p-4 pl-6 font-mono text-[#556994]">#{m.id}</td>
                     <td className="p-4 font-bold text-slate-200">{m.name}</td>
                     <td className="p-4 text-slate-400">{m.type}</td>
-                    <td className="p-4 font-mono text-cyan-400">{m.rated_capacity?.toLocaleString()} kW</td>
+                    <td className="p-4 font-mono text-cyan-400">
+                      {m.rated_capacity?.toLocaleString()} kW
+                    </td>
                     <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${m.status === 'RUNNING' ? 'bg-emerald-950/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>{m.status}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold ${m.status === 'RUNNING' ? 'bg-emerald-950/20 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}
+                      >
+                        {m.status}
+                      </span>
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleOpenEdit(m)} className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(m.id)} className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button
+                        onClick={() => handleOpenEdit(m)}
+                        className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(m.id)}
+                        className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -339,7 +478,7 @@ export const Management: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1F2942]/40">
-                {devices.map(d => (
+                {devices.map((d) => (
                   <tr key={d.id} className="hover:bg-[#151C36]/20 transition">
                     <td className="p-4 pl-6 font-mono text-[#556994]">#{d.id}</td>
                     <td className="p-4 font-bold text-slate-200">{d.name}</td>
@@ -348,8 +487,18 @@ export const Management: React.FC = () => {
                     <td className="p-4 text-slate-400 font-bold">{d.unit || '-'}</td>
                     <td className="p-4 font-mono text-slate-500">{d.serial_number}</td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleOpenEdit(d)} className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(d.id)} className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button
+                        onClick={() => handleOpenEdit(d)}
+                        className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(d.id)}
+                        className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -370,20 +519,36 @@ export const Management: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#1F2942]/40">
-                {users.map(u => (
+                {users.map((u) => (
                   <tr key={u.id} className="hover:bg-[#151C36]/20 transition">
                     <td className="p-4 pl-6 font-mono text-[#556994]">#{u.id}</td>
                     <td className="p-4 font-bold text-slate-200">{u.username}</td>
                     <td className="p-4 text-slate-400">{u.email}</td>
                     <td className="p-4 font-mono">
-                      <span className="bg-[#131930] px-2 py-0.5 border border-[#1F2942] rounded text-[10px]">Role ID {u.role_id}</span>
+                      <span className="bg-[#131930] px-2 py-0.5 border border-[#1F2942] rounded text-[10px]">
+                        Role ID {u.role_id}
+                      </span>
                     </td>
                     <td className="p-4">
-                      <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${u.is_active ? 'bg-emerald-950/20 text-emerald-400' : 'bg-red-950/20 text-red-400'}`}>{u.is_active ? 'ACTIVE' : 'INACTIVE'}</span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[9px] font-bold ${u.is_active ? 'bg-emerald-950/20 text-emerald-400' : 'bg-red-950/20 text-red-400'}`}
+                      >
+                        {u.is_active ? 'ACTIVE' : 'INACTIVE'}
+                      </span>
                     </td>
                     <td className="p-4 pr-6 text-right space-x-2">
-                      <button onClick={() => handleOpenEdit(u)} className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"><Edit2 className="h-3.5 w-3.5" /></button>
-                      <button onClick={() => handleDelete(u.id)} className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"><Trash2 className="h-3.5 w-3.5" /></button>
+                      <button
+                        onClick={() => handleOpenEdit(u)}
+                        className="p-1 rounded bg-[#20294A] text-slate-300 hover:text-white"
+                      >
+                        <Edit2 className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(u.id)}
+                        className="p-1 rounded bg-red-950/20 text-red-450 hover:text-red-400"
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -398,8 +563,15 @@ export const Management: React.FC = () => {
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-[#101529] border border-[#1F2942] rounded-3xl w-full max-w-md overflow-hidden shadow-2xl relative">
             <div className="p-5 border-b border-[#1F2942]/80 bg-[#151C36] flex justify-between items-center">
-              <h3 className="font-extrabold text-sm text-white uppercase tracking-wider">{modalMode} {activeSubTab.slice(0, -1)}</h3>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white font-bold">&times;</button>
+              <h3 className="font-extrabold text-sm text-white uppercase tracking-wider">
+                {modalMode} {activeSubTab.slice(0, -1)}
+              </h3>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="text-slate-400 hover:text-white font-bold"
+              >
+                &times;
+              </button>
             </div>
 
             <form onSubmit={handleSave} className="p-6 space-y-4">
@@ -414,20 +586,48 @@ export const Management: React.FC = () => {
               {activeSubTab === 'PLANTS' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Plant Name</label>
-                    <input type="text" required value={plantForm.name} onChange={(e) => setPlantForm({ ...plantForm, name: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Plant Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={plantForm.name}
+                      onChange={(e) => setPlantForm({ ...plantForm, name: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Location</label>
-                    <input type="text" value={plantForm.location} onChange={(e) => setPlantForm({ ...plantForm, location: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Location
+                    </label>
+                    <input
+                      type="text"
+                      value={plantForm.location}
+                      onChange={(e) => setPlantForm({ ...plantForm, location: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Timezone</label>
-                    <input type="text" value={plantForm.timezone} onChange={(e) => setPlantForm({ ...plantForm, timezone: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Timezone
+                    </label>
+                    <input
+                      type="text"
+                      value={plantForm.timezone}
+                      onChange={(e) => setPlantForm({ ...plantForm, timezone: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Description</label>
-                    <textarea value={plantForm.description} onChange={(e) => setPlantForm({ ...plantForm, description: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none h-20" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Description
+                    </label>
+                    <textarea
+                      value={plantForm.description}
+                      onChange={(e) => setPlantForm({ ...plantForm, description: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none h-20"
+                    />
                   </div>
                 </div>
               )}
@@ -436,18 +636,44 @@ export const Management: React.FC = () => {
               {activeSubTab === 'DEPTS' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Parent Plant</label>
-                    <select value={deptForm.plant_id} onChange={(e) => setDeptForm({ ...deptForm, plant_id: parseInt(e.target.value) })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none">
-                      {plants.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Parent Plant
+                    </label>
+                    <select
+                      value={deptForm.plant_id}
+                      onChange={(e) =>
+                        setDeptForm({ ...deptForm, plant_id: parseInt(e.target.value) })
+                      }
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    >
+                      {plants.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Department Name</label>
-                    <input type="text" required value={deptForm.name} onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Department Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deptForm.name}
+                      onChange={(e) => setDeptForm({ ...deptForm, name: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Description</label>
-                    <textarea value={deptForm.description} onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none h-20" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Description
+                    </label>
+                    <textarea
+                      value={deptForm.description}
+                      onChange={(e) => setDeptForm({ ...deptForm, description: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none h-20"
+                    />
                   </div>
                 </div>
               )}
@@ -456,22 +682,63 @@ export const Management: React.FC = () => {
               {activeSubTab === 'MACHINES' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Department</label>
-                    <select value={machineForm.department_id} onChange={(e) => setMachineForm({ ...machineForm, department_id: parseInt(e.target.value) })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none">
-                      {depts.map(d => <option key={d.id} value={d.id}>{d.name}</option>)}
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Department
+                    </label>
+                    <select
+                      value={machineForm.department_id}
+                      onChange={(e) =>
+                        setMachineForm({ ...machineForm, department_id: parseInt(e.target.value) })
+                      }
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    >
+                      {depts.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Machine Name</label>
-                    <input type="text" required value={machineForm.name} onChange={(e) => setMachineForm({ ...machineForm, name: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Machine Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={machineForm.name}
+                      onChange={(e) => setMachineForm({ ...machineForm, name: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Machine Type</label>
-                    <input type="text" required value={machineForm.type} onChange={(e) => setMachineForm({ ...machineForm, type: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Machine Type
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={machineForm.type}
+                      onChange={(e) => setMachineForm({ ...machineForm, type: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Rated Capacity (kW)</label>
-                    <input type="number" required value={machineForm.rated_capacity} onChange={(e) => setMachineForm({ ...machineForm, rated_capacity: parseFloat(e.target.value) })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Rated Capacity (kW)
+                    </label>
+                    <input
+                      type="number"
+                      required
+                      value={machineForm.rated_capacity}
+                      onChange={(e) =>
+                        setMachineForm({
+                          ...machineForm,
+                          rated_capacity: parseFloat(e.target.value),
+                        })
+                      }
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                 </div>
               )}
@@ -480,37 +747,101 @@ export const Management: React.FC = () => {
               {activeSubTab === 'DEVICES' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Parent Machine</label>
-                    <select value={deviceForm.machine_id} onChange={(e) => setDeviceForm({ ...deviceForm, machine_id: parseInt(e.target.value) })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none">
-                      {machines.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Parent Machine
+                    </label>
+                    <select
+                      value={deviceForm.machine_id}
+                      onChange={(e) =>
+                        setDeviceForm({ ...deviceForm, machine_id: parseInt(e.target.value) })
+                      }
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    >
+                      {machines.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          {m.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Device Name</label>
-                    <input type="text" required value={deviceForm.name} onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Device Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deviceForm.name}
+                      onChange={(e) => setDeviceForm({ ...deviceForm, name: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Register Modbus Address</label>
-                    <input type="text" required value={deviceForm.register_address} onChange={(e) => setDeviceForm({ ...deviceForm, register_address: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Register Modbus Address
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={deviceForm.register_address}
+                      onChange={(e) =>
+                        setDeviceForm({ ...deviceForm, register_address: e.target.value })
+                      }
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Unit</label>
-                      <input type="text" required value={deviceForm.unit} onChange={(e) => setDeviceForm({ ...deviceForm, unit: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                        Unit
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={deviceForm.unit}
+                        onChange={(e) => setDeviceForm({ ...deviceForm, unit: e.target.value })}
+                        className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                      />
                     </div>
                     <div>
-                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Device Type</label>
-                      <input type="text" required value={deviceForm.type} onChange={(e) => setDeviceForm({ ...deviceForm, type: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                        Device Type
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={deviceForm.type}
+                        onChange={(e) => setDeviceForm({ ...deviceForm, type: e.target.value })}
+                        className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                      />
                     </div>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Serial Number</label>
-                      <input type="text" value={deviceForm.serial_number} onChange={(e) => setDeviceForm({ ...deviceForm, serial_number: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                        Serial Number
+                      </label>
+                      <input
+                        type="text"
+                        value={deviceForm.serial_number}
+                        onChange={(e) =>
+                          setDeviceForm({ ...deviceForm, serial_number: e.target.value })
+                        }
+                        className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                      />
                     </div>
                     <div>
-                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Firmware Version</label>
-                      <input type="text" value={deviceForm.firmware_version} onChange={(e) => setDeviceForm({ ...deviceForm, firmware_version: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                        Firmware Version
+                      </label>
+                      <input
+                        type="text"
+                        value={deviceForm.firmware_version}
+                        onChange={(e) =>
+                          setDeviceForm({ ...deviceForm, firmware_version: e.target.value })
+                        }
+                        className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                      />
                     </div>
                   </div>
                 </div>
@@ -520,22 +851,54 @@ export const Management: React.FC = () => {
               {activeSubTab === 'USERS' && (
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Username</label>
-                    <input type="text" required value={userForm.username} onChange={(e) => setUserForm({ ...userForm, username: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Username
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={userForm.username}
+                      onChange={(e) => setUserForm({ ...userForm, username: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Email Address</label>
-                    <input type="email" required value={userForm.email} onChange={(e) => setUserForm({ ...userForm, email: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Email Address
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      value={userForm.email}
+                      onChange={(e) => setUserForm({ ...userForm, email: e.target.value })}
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    />
                   </div>
                   {modalMode === 'ADD' && (
                     <div>
-                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Password</label>
-                      <input type="password" required={modalMode === 'ADD'} value={userForm.password} onChange={(e) => setUserForm({ ...userForm, password: e.target.value })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none" />
+                      <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                        Password
+                      </label>
+                      <input
+                        type="password"
+                        required={modalMode === 'ADD'}
+                        value={userForm.password}
+                        onChange={(e) => setUserForm({ ...userForm, password: e.target.value })}
+                        className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                      />
                     </div>
                   )}
                   <div>
-                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">Role level</label>
-                    <select value={userForm.role_id} onChange={(e) => setUserForm({ ...userForm, role_id: parseInt(e.target.value) })} className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none">
+                    <label className="block text-slate-400 mb-1 font-bold uppercase tracking-wider text-[9px]">
+                      Role level
+                    </label>
+                    <select
+                      value={userForm.role_id}
+                      onChange={(e) =>
+                        setUserForm({ ...userForm, role_id: parseInt(e.target.value) })
+                      }
+                      className="w-full bg-[#0D1227] border border-[#1F2942] rounded-xl p-3 text-slate-100 focus:outline-none"
+                    >
                       <option value={1}>Admin</option>
                       <option value={2}>Plant Manager</option>
                       <option value={3}>Engineer</option>
@@ -546,7 +909,7 @@ export const Management: React.FC = () => {
                 </div>
               )}
 
-              <button 
+              <button
                 type="submit"
                 className="w-full bg-blue-600 hover:bg-blue-700 text-white font-extrabold py-3.5 rounded-xl uppercase tracking-wider transition-all mt-4"
               >
@@ -556,7 +919,6 @@ export const Management: React.FC = () => {
           </div>
         </div>
       )}
-
     </div>
   );
 };

@@ -34,8 +34,9 @@ export const Chatbot: React.FC = () => {
       setHistory([
         {
           role: 'model',
-          content: "Hello Operator! I am your AI Operations Assistant. Ask me anything about the furnace live telemetry, safety limits, or active alarms in the plant."
-        }
+          content:
+            'Hello Operator! I am your AI Operations Assistant. Ask me anything about the furnace live telemetry, safety limits, or active alarms in the plant.',
+        },
       ]);
     }
   }, []);
@@ -57,20 +58,20 @@ export const Chatbot: React.FC = () => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           message: rawPrompt,
-          history: updatedHistory.slice(0, -1).map(h => ({
+          history: updatedHistory.slice(0, -1).map((h) => ({
             role: h.role,
-            content: h.content
-          }))
-        })
+            content: h.content,
+          })),
+        }),
       });
 
       if (res.ok) {
         const data = await res.json();
-        setHistory(prev => [...prev, { role: 'model', content: data.response }]);
+        setHistory((prev) => [...prev, { role: 'model', content: data.response }]);
         if (data.offline) {
           setIsOffline(true);
         } else {
@@ -81,12 +82,13 @@ export const Chatbot: React.FC = () => {
       }
     } catch (e) {
       console.error(e);
-      setHistory(prev => [
+      setHistory((prev) => [
         ...prev,
         {
           role: 'model',
-          content: "**Chat Connection Error**\n\nUnable to reach the AI engine. Please verify the FastAPI backend server is running and healthy."
-        }
+          content:
+            '**Chat Connection Error**\n\nUnable to reach the AI engine. Please verify the FastAPI backend server is running and healthy.',
+        },
       ]);
     } finally {
       setLoading(false);
@@ -103,15 +105,15 @@ export const Chatbot: React.FC = () => {
     setHistory([
       {
         role: 'model',
-        content: "Chat history cleared. How can I assist you with the live furnace analytics now?"
-      }
+        content: 'Chat history cleared. How can I assist you with the live furnace analytics now?',
+      },
     ]);
   };
 
   // Custom markdown formatting parser for sleek cyan/text rendering
   const formatMessageContent = (text: string) => {
-    if (!text) return "";
-    
+    if (!text) return '';
+
     const lines = text.split('\n');
     return (
       <div className="space-y-1.5 font-sans">
@@ -119,8 +121,8 @@ export const Chatbot: React.FC = () => {
           let trimmed = line.trim();
           let isBullet = false;
           let isNumbered = false;
-          let numPrefix = "";
-          
+          let numPrefix = '';
+
           if (trimmed.startsWith('- ')) {
             isBullet = true;
             trimmed = trimmed.substring(2);
@@ -135,31 +137,35 @@ export const Chatbot: React.FC = () => {
               trimmed = numMatch[2];
             }
           }
-          
+
           // Parse **bold** tags
           const boldRegex = /\*\*(.*?)\*\*/g;
           const parts = [];
           let lastIndex = 0;
           let match;
-          
+
           while ((match = boldRegex.exec(trimmed)) !== null) {
             if (match.index > lastIndex) {
               parts.push(trimmed.substring(lastIndex, match.index));
             }
-            parts.push(<strong key={match.index} className="font-extrabold text-cyan-400">{match[1]}</strong>);
+            parts.push(
+              <strong key={match.index} className="font-extrabold text-cyan-400">
+                {match[1]}
+              </strong>
+            );
             lastIndex = boldRegex.lastIndex;
           }
-          
+
           if (lastIndex < trimmed.length) {
             parts.push(trimmed.substring(lastIndex));
           }
-          
+
           const content = parts.length > 0 ? parts : trimmed;
-          
+
           if (line.trim() === '') {
             return <div key={idx} className="h-1.5" />;
           }
-          
+
           if (isBullet) {
             return (
               <div key={idx} className="flex items-start gap-2 ml-2">
@@ -168,27 +174,33 @@ export const Chatbot: React.FC = () => {
               </div>
             );
           }
-          
+
           if (isNumbered) {
             return (
               <div key={idx} className="flex items-start gap-2 ml-2">
-                <span className="text-cyan-400 font-mono text-xs mt-0.5 font-bold">{numPrefix}.</span>
+                <span className="text-cyan-400 font-mono text-xs mt-0.5 font-bold">
+                  {numPrefix}.
+                </span>
                 <span className="text-slate-300 text-[13px] leading-relaxed">{content}</span>
               </div>
             );
           }
-          
-          return <p key={idx} className="text-slate-300 text-[13px] leading-relaxed">{content}</p>;
+
+          return (
+            <p key={idx} className="text-slate-300 text-[13px] leading-relaxed">
+              {content}
+            </p>
+          );
         })}
       </div>
     );
   };
 
   const suggestionPills = [
-    "Are there active alarms?",
-    "Status of SMS-1 furnace",
-    "List key sensors",
-    "What is this platform?"
+    'Are there active alarms?',
+    'Status of SMS-1 furnace',
+    'List key sensors',
+    'What is this platform?',
   ];
 
   return (
@@ -218,7 +230,9 @@ export const Chatbot: React.FC = () => {
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-indigo-500/20 text-indigo-400 relative">
                 <Bot className="h-5 w-5" />
-                <span className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ring-2 ring-[#141C38] ${isOffline ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`} />
+                <span
+                  className={`absolute bottom-0 right-0 h-2 w-2 rounded-full ring-2 ring-[#141C38] ${isOffline ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500 animate-pulse'}`}
+                />
               </div>
               <div>
                 <h3 className="font-bold text-xs text-white uppercase tracking-wider flex items-center gap-1">
@@ -230,7 +244,7 @@ export const Chatbot: React.FC = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <button
                 onClick={clearHistory}
@@ -263,7 +277,7 @@ export const Chatbot: React.FC = () => {
                     <Bot className="h-4.5 w-4.5" />
                   </div>
                 )}
-                
+
                 <div
                   className={`max-w-[78%] rounded-2xl px-4 py-3 text-sm shadow-md transition-all ${
                     msg.role === 'user'
@@ -295,7 +309,7 @@ export const Chatbot: React.FC = () => {
                 </div>
               </div>
             )}
-            
+
             <div ref={messagesEndRef} />
           </div>
 
@@ -321,7 +335,11 @@ export const Chatbot: React.FC = () => {
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyDown={handleKeyPress}
-              placeholder={isOffline ? "Ask local questions (Alarms, Sensors)..." : "Ask Copilot about sensors or active alarms..."}
+              placeholder={
+                isOffline
+                  ? 'Ask local questions (Alarms, Sensors)...'
+                  : 'Ask Copilot about sensors or active alarms...'
+              }
 
               className="flex-1 bg-[#151D3B] text-slate-100 placeholder-slate-500 text-xs px-3.5 py-2.5 rounded-xl border border-[#263566] focus:outline-none focus:border-cyan-500 focus:shadow-[0_0_8px_rgba(34,211,238,0.3)] transition-all"
               disabled={loading}

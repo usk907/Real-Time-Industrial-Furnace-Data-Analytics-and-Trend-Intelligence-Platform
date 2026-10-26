@@ -26,7 +26,7 @@ export const Header: React.FC = () => {
   const fetchAlarms = async () => {
     try {
       const res = await fetch('/api/alarms?active=true&limit=10', {
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         const data = await res.json();
@@ -41,7 +41,7 @@ export const Header: React.FC = () => {
     try {
       const res = await fetch(`/api/alarms/${id}/ack`, {
         method: 'POST',
-        headers: { Authorization: `Bearer ${token}` }
+        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         fetchAlarms();
@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
     }
   };
 
-  const unacknowledgedCount = alarms.filter(a => !a.acknowledged).length;
+  const unacknowledgedCount = alarms.filter((a) => !a.acknowledged).length;
 
   return (
     <header className="h-20 border-b border-[#1F2942]/60 bg-[#0A0D1A]/90 backdrop-blur-md flex items-center justify-between px-8 relative z-10">
@@ -79,7 +79,9 @@ export const Header: React.FC = () => {
         >
           <Server className="h-4 w-4 text-cyan-400 group-hover:scale-110 transition-transform" />
           <div className="text-left leading-none">
-            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Backend Link</p>
+            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">
+              Backend Link
+            </p>
             <p className="text-[11px] font-bold text-cyan-400 font-mono">
               {getApiBase() ? getApiBase().replace(/^https?:\/\//, '') : '127.0.0.1:8000'}
             </p>
@@ -93,26 +95,28 @@ export const Header: React.FC = () => {
               connectionStatus === 'Connected'
                 ? 'bg-emerald-400 animate-pulse shadow-lg shadow-emerald-500/50'
                 : connectionStatus === 'Connecting'
-                ? 'bg-amber-400 animate-pulse shadow-lg shadow-amber-500/50'
-                : 'bg-rose-500 shadow-lg shadow-rose-500/50'
+                  ? 'bg-amber-400 animate-pulse shadow-lg shadow-amber-500/50'
+                  : 'bg-rose-500 shadow-lg shadow-rose-500/50'
             }`}
           />
           <div className="text-left leading-none">
-            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">Live Stream (WS)</p>
+            <p className="text-[9px] text-slate-400 uppercase font-bold tracking-wider">
+              Live Stream (WS)
+            </p>
             <p
               className={`text-[11px] font-bold font-mono ${
                 connectionStatus === 'Connected'
                   ? 'text-emerald-400'
                   : connectionStatus === 'Connecting'
-                  ? 'text-amber-400'
-                  : 'text-rose-400'
+                    ? 'text-amber-400'
+                    : 'text-rose-400'
               }`}
             >
               {connectionStatus === 'Connected'
                 ? `${tagList.length || 60} Tags Active`
                 : connectionStatus === 'Connecting'
-                ? 'Reconnecting...'
-                : 'Offline'}
+                  ? 'Reconnecting...'
+                  : 'Offline'}
             </p>
           </div>
         </div>
@@ -135,7 +139,9 @@ export const Header: React.FC = () => {
           {isOpen && (
             <div className="absolute right-0 mt-3 w-80 bg-[#101529] border border-[#1F2942] rounded-2xl shadow-2xl overflow-hidden z-30">
               <div className="p-4 border-b border-[#1F2942]/80 bg-[#151C36] flex justify-between items-center">
-                <span className="font-bold text-xs text-white uppercase tracking-wider">Active Alarms</span>
+                <span className="font-bold text-xs text-white uppercase tracking-wider">
+                  Active Alarms
+                </span>
                 <span className="text-[9px] bg-red-600 text-white font-bold px-2 py-0.5 rounded-full">
                   {unacknowledgedCount} Unacked
                 </span>
@@ -144,7 +150,7 @@ export const Header: React.FC = () => {
                 {alarms.length === 0 ? (
                   <p className="text-slate-500 text-center py-8">No active alarms recorded.</p>
                 ) : (
-                  alarms.map(a => (
+                  alarms.map((a) => (
                     <div
                       key={a.id}
                       className={`p-3.5 hover:bg-[#151C36]/50 flex justify-between items-start gap-2.5 ${
@@ -155,7 +161,9 @@ export const Header: React.FC = () => {
                         <div className="flex items-center gap-1.5">
                           <span
                             className={`text-[9px] font-bold px-1.5 py-0.2 rounded ${
-                              a.severity === 'CRITICAL' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
+                              a.severity === 'CRITICAL'
+                                ? 'bg-red-500/20 text-red-400'
+                                : 'bg-amber-500/20 text-amber-400'
                             }`}
                           >
                             {a.severity}
@@ -193,8 +201,12 @@ export const Header: React.FC = () => {
               {user ? user.username.slice(0, 2).toUpperCase() : <UserIcon className="h-4 w-4" />}
             </div>
             <div className="hidden md:block text-left">
-              <span className="block text-xs font-bold text-slate-200">{user?.username || 'Operator'}</span>
-              <span className="block text-[10px] text-cyan-400 capitalize font-medium">{user?.role || 'Viewer'}</span>
+              <span className="block text-xs font-bold text-slate-200">
+                {user?.username || 'Operator'}
+              </span>
+              <span className="block text-[10px] text-cyan-400 capitalize font-medium">
+                {user?.role || 'Viewer'}
+              </span>
             </div>
           </div>
 

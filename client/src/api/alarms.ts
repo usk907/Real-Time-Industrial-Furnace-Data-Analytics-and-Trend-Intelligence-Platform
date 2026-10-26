@@ -24,8 +24,10 @@ export async function getAlarms(active?: boolean, limit: number = 100): Promise<
   return apiFetch<ServerAlarm[]>(`/api/alarms?${params.toString()}`);
 }
 
-export async function acknowledgeAlarm(alarmId: number): Promise<{ success: boolean; id: number; acknowledged_by: string; status: string }> {
+export async function acknowledgeAlarm(
+  alarmId: number
+): Promise<{ success: boolean; id: number; acknowledged_by: string; status: string }> {
   return apiFetch(`/api/alarms/${alarmId}/ack`, {
-    method: 'POST'
+    method: 'POST',
   });
 }

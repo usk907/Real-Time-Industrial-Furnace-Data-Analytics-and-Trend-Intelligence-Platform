@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Server, Wifi, WifiOff, RefreshCw, CheckCircle2, AlertTriangle, X, Globe, Smartphone } from 'lucide-react';
+import {
+  Server,
+  Wifi,
+  WifiOff,
+  RefreshCw,
+  CheckCircle2,
+  AlertTriangle,
+  X,
+  Globe,
+  Smartphone,
+} from 'lucide-react';
 import { getApiBase, setApiBase, getDeviceType } from '../config';
 
 interface ServerSettingsModalProps {
@@ -47,7 +57,7 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
     } catch (err: any) {
       setPingStatus({
         ok: false,
-        error: err.name === 'AbortError' ? 'Connection timed out (>5s)' : 'Cannot reach backend'
+        error: err.name === 'AbortError' ? 'Connection timed out (>5s)' : 'Cannot reach backend',
       });
     } finally {
       setTesting(false);
@@ -83,7 +93,9 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
               <Server className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-white">Backend Connection Settings</h3>
+              <h3 className="text-sm font-bold uppercase tracking-wider text-white">
+                Backend Connection Settings
+              </h3>
               <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
                 {device === 'app' ? (
                   <>
@@ -99,7 +111,7 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
               </p>
             </div>
           </div>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#1A2346] transition-all"
           >
@@ -131,17 +143,20 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
               </button>
             </div>
             <p className="text-[10px] text-slate-500 mt-1.5">
-              Leave blank to use the default relative proxy (<code className="text-cyan-400">/api</code> on port 5173).
+              Leave blank to use the default relative proxy (
+              <code className="text-cyan-400">/api</code> on port 5173).
             </p>
           </div>
 
           {/* Test Status Banner */}
           {pingStatus && (
-            <div className={`p-3.5 rounded-xl border flex items-center justify-between transition-all ${
-              pingStatus.ok 
-                ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300' 
-                : 'bg-red-950/40 border-red-800/60 text-red-300'
-            }`}>
+            <div
+              className={`p-3.5 rounded-xl border flex items-center justify-between transition-all ${
+                pingStatus.ok
+                  ? 'bg-emerald-950/40 border-emerald-800/60 text-emerald-300'
+                  : 'bg-red-950/40 border-red-800/60 text-red-300'
+              }`}
+            >
               <div className="flex items-center gap-2.5">
                 {pingStatus.ok ? (
                   <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
@@ -149,8 +164,8 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
                   <AlertTriangle className="h-4 w-4 text-red-400 shrink-0" />
                 )}
                 <span className="font-medium text-[11px]">
-                  {pingStatus.ok 
-                    ? `Connected! Backend online (${pingStatus.latencyMs}ms latency)` 
+                  {pingStatus.ok
+                    ? `Connected! Backend online (${pingStatus.latencyMs}ms latency)`
                     : `Connection failed: ${pingStatus.error}`}
                 </span>
               </div>
@@ -189,7 +204,13 @@ export const ServerSettingsModal: React.FC<ServerSettingsModalProps> = ({ isOpen
           </div>
 
           <div className="p-3 bg-[#111730] border border-[#1E294B] rounded-xl text-[11px] text-slate-400 leading-relaxed">
-            <span className="font-bold text-cyan-400">Mobile Phone Setup:</span> Run <code className="text-white bg-[#0A0D1B] px-1.5 py-0.5 rounded font-mono">tunnel.bat</code> on your PC to generate a free public URL, then enter the <code className="text-amber-300 font-mono">https://*.trycloudflare.com</code> address above to monitor your furnaces live from anywhere.
+            <span className="font-bold text-cyan-400">Mobile Phone Setup:</span> Run{' '}
+            <code className="text-white bg-[#0A0D1B] px-1.5 py-0.5 rounded font-mono">
+              tunnel.bat
+            </code>{' '}
+            on your PC to generate a free public URL, then enter the{' '}
+            <code className="text-amber-300 font-mono">https://*.trycloudflare.com</code> address
+            above to monitor your furnaces live from anywhere.
           </div>
         </div>
 

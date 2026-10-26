@@ -22,7 +22,7 @@ export const Consumption: React.FC = () => {
       kwh: gridKwh,
       share: '100%',
       rate: '$0.095 / kWh',
-      cost: totalCost
+      cost: totalCost,
     },
     {
       equipment: 'Electric Arc Furnace 1 (EAF-1)',
@@ -30,7 +30,7 @@ export const Consumption: React.FC = () => {
       kwh: eafKwh,
       share: `${Math.round((eafKwh / gridKwh) * 100)}%`,
       rate: '$0.095 / kWh',
-      cost: eafKwh * tariffRate
+      cost: eafKwh * tariffRate,
     },
     {
       equipment: 'Ladle Refining Furnace 2 (LRF-2)',
@@ -38,7 +38,7 @@ export const Consumption: React.FC = () => {
       kwh: lrfKwh,
       share: `${Math.round((lrfKwh / gridKwh) * 100)}%`,
       rate: '$0.095 / kWh',
-      cost: lrfKwh * tariffRate
+      cost: lrfKwh * tariffRate,
     },
     {
       equipment: 'Hot Rolling Mill Stand 1',
@@ -46,7 +46,7 @@ export const Consumption: React.FC = () => {
       kwh: rmKwh,
       share: `${Math.round((rmKwh / gridKwh) * 100)}%`,
       rate: '$0.095 / kWh',
-      cost: rmKwh * tariffRate
+      cost: rmKwh * tariffRate,
     },
     {
       equipment: 'Industrial Water Treatment (WTP-1)',
@@ -54,8 +54,8 @@ export const Consumption: React.FC = () => {
       kwh: wtpKwh,
       share: `${Math.round((wtpKwh / gridKwh) * 100)}%`,
       rate: '$0.095 / kWh',
-      cost: wtpKwh * tariffRate
-    }
+      cost: wtpKwh * tariffRate,
+    },
   ];
 
   return (
@@ -77,9 +77,7 @@ export const Consumption: React.FC = () => {
               connectionStatus === 'Connected' ? 'bg-emerald-400 animate-pulse' : 'bg-amber-400'
             }`}
           />
-          <span className="text-[11px] font-mono uppercase text-slate-300">
-            {connectionStatus}
-          </span>
+          <span className="text-[11px] font-mono uppercase text-slate-300">{connectionStatus}</span>
         </div>
       </div>
 
@@ -159,18 +157,14 @@ export const Consumption: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-[#1F2B50]/60 font-mono">
-              {energyAccounts.map(account => (
+              {energyAccounts.map((account) => (
                 <tr key={account.tag} className="hover:bg-[#10162B]/50 transition-colors">
-                  <td className="py-3 px-4 font-sans font-bold text-white">
-                    {account.equipment}
-                  </td>
+                  <td className="py-3 px-4 font-sans font-bold text-white">{account.equipment}</td>
                   <td className="py-3 px-4 text-cyan-400">{account.tag}</td>
                   <td className="py-3 px-4 text-right font-bold text-white">
                     {Math.round(account.kwh).toLocaleString()}
                   </td>
-                  <td className="py-3 px-4 text-right text-slate-400 font-sans">
-                    {account.share}
-                  </td>
+                  <td className="py-3 px-4 text-right text-slate-400 font-sans">{account.share}</td>
                   <td className="py-3 px-4 text-right text-emerald-400 font-bold">
                     ${Math.round(account.cost).toLocaleString()}
                   </td>

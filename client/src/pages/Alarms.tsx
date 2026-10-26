@@ -14,7 +14,12 @@ export const Alarms: React.FC = () => {
     if (!token) return;
     setLoading(true);
     try {
-      const activeParam = filterActive === 'ACTIVE_ONLY' ? true : filterActive === 'RESOLVED_ONLY' ? false : undefined;
+      const activeParam =
+        filterActive === 'ACTIVE_ONLY'
+          ? true
+          : filterActive === 'RESOLVED_ONLY'
+            ? false
+            : undefined;
       const data = await getAlarms(activeParam, 100);
       setAlarms(data);
     } catch (e) {
@@ -42,7 +47,8 @@ export const Alarms: React.FC = () => {
     }
   };
 
-  const isAckPermitted = user && ['admin', 'manager', 'engineer', 'operator'].includes(user.role.toLowerCase());
+  const isAckPermitted =
+    user && ['admin', 'manager', 'engineer', 'operator'].includes(user.role.toLowerCase());
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-200">
@@ -63,8 +69,8 @@ export const Alarms: React.FC = () => {
             {[
               { id: 'ACTIVE_ONLY', label: 'Active Incidents' },
               { id: 'ALL', label: 'All Logs' },
-              { id: 'RESOLVED_ONLY', label: 'Resolved' }
-            ].map(tab => (
+              { id: 'RESOLVED_ONLY', label: 'Resolved' },
+            ].map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setFilterActive(tab.id)}
@@ -114,7 +120,7 @@ export const Alarms: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                alarms.map(alarm => {
+                alarms.map((alarm) => {
                   const isResolved = Boolean(alarm.resolved_at);
                   const isCritical = alarm.severity === 'CRITICAL';
 
@@ -123,7 +129,9 @@ export const Alarms: React.FC = () => {
                       <td className="py-3 px-4 font-sans font-bold">
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
-                            isCritical ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            isCritical
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/30'
+                              : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
                           }`}
                         >
                           {alarm.severity}
@@ -142,7 +150,9 @@ export const Alarms: React.FC = () => {
                             <span>Ack by {alarm.acknowledged_by || 'Staff'}</span>
                           </span>
                         ) : (
-                          <span className="text-amber-400 font-bold animate-pulse">Unacknowledged</span>
+                          <span className="text-amber-400 font-bold animate-pulse">
+                            Unacknowledged
+                          </span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-slate-400 font-sans text-[11px]">
@@ -166,7 +176,10 @@ export const Alarms: React.FC = () => {
                         ) : alarm.acknowledged ? (
                           <span className="text-slate-500 text-[11px]">Acknowledged</span>
                         ) : (
-                          <span className="text-slate-600 text-[11px]" title="Requires operator role">
+                          <span
+                            className="text-slate-600 text-[11px]"
+                            title="Requires operator role"
+                          >
                             Read Only
                           </span>
                         )}

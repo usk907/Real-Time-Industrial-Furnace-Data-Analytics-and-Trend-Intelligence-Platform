@@ -23,8 +23,9 @@ export const AiQuery: React.FC = () => {
               <p className="font-bold text-white">Architecture Status</p>
               <p className="text-slate-400 mt-0.5">
                 In accordance with the 3-Tier architectural refactor, external AI dependencies
-                (Google Gemini & OpenAI LLM drivers) have been decoupled from the real-time SCADA server.
-                The legacy implementation is preserved in <code className="text-cyan-400">legacy/server_archive/ai_copilot.py</code>.
+                (Google Gemini & OpenAI LLM drivers) have been decoupled from the real-time SCADA
+                server. The legacy implementation is preserved in{' '}
+                <code className="text-cyan-400">legacy/server_archive/ai_copilot.py</code>.
               </p>
             </div>
           </div>
@@ -34,8 +35,10 @@ export const AiQuery: React.FC = () => {
             <div>
               <p className="font-bold text-white">Direct Live Telemetry Available</p>
               <p className="text-slate-400 mt-0.5">
-                All 60 industrial furnace, turbine, and water channels are actively monitored and queryable
-                via the <strong className="text-white">Dashboard</strong>, <strong className="text-white">Live Monitoring</strong>, and <strong className="text-white">Trends</strong> modules.
+                All 60 industrial furnace, turbine, and water channels are actively monitored and
+                queryable via the <strong className="text-white">Dashboard</strong>,{' '}
+                <strong className="text-white">Live Monitoring</strong>, and{' '}
+                <strong className="text-white">Trends</strong> modules.
               </p>
             </div>
           </div>
