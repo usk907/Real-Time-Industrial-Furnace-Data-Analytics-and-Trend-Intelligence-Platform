@@ -60,6 +60,11 @@ if "%ANDROID_HOME%" neq "" (
 :: 4. Build Debug APK via Gradle
 echo [4/4] Compiling native Android APK via Gradle...
 cd android
+if not exist "local.properties" (
+    if "%ANDROID_HOME%" neq "" (
+        echo sdk.dir=%ANDROID_HOME:\=\\%> local.properties
+    )
+)
 if exist "gradlew.bat" (
     call gradlew.bat assembleDebug
     if %ERRORLEVEL% equ 0 (
