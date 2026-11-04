@@ -1,3 +1,0 @@
-"""
-IEIP Backend Services
-"""
