@@ -1,119 +1,157 @@
-# Industrial Energy Intelligence Platform (IEIP)
+# IEIP — Web Dashboard + Android APK (`branch/client`)
 
-A high-performance, real-time industrial telemetry, SCADA monitoring, and energy intelligence platform for heavy industrial furnaces, power distribution systems, and utilities.
+This branch contains both the **FastAPI backend** and the **React frontend**, which runs as:
+- 🌐 **Web dashboard** — in any browser via Vite dev server or Nginx
+- 📱 **Android APK** — native mobile app via Capacitor (same React codebase, built into APK)
 
-```mermaid
-flowchart LR
-    subgraph Tier1 ["Part 1: Generator"]
-        G["Industrial Telemetry Generator<br/>(generator.py • 60 Tags • 1 Hz)"]
-    end
+The generator (`branch/generator`) must be running and writing to MySQL for live data.
 
-    subgraph DB ["Local MySQL Database (127.0.0.1:3307)"]
-        FR[("furnace_readings<br/>(Time-Series Archive)")]
-        FL[("furnace_latest<br/>(Real-Time State Cache)")]
-        US[("users<br/>(RBAC Accounts)")]
-        AL[("alarms<br/>(Incident Logs)")]
-    end
-
-    subgraph Tier2 ["Part 2: Server"]
-        S["FastAPI Telemetry Server<br/>(Port 8000 • SQLAlchemy 2.0)"]
-        B["Broadcaster Loop<br/>(1 Query/sec)"]
-        A["Alarm Supervisor<br/>(Threshold Engine)"]
-    end
-
-    subgraph Gateway ["Secure Gateway"]
-        T["Cloudflare Tunnel<br/>(cloudflared • HTTPS / WSS)"]
-    end
-
-    subgraph Tier3 ["Part 3: Client"]
-        W["React 18 / Vite Web Dashboard<br/>(Port 5173 • ECharts)"]
-        M["Capacitor Native Android APK<br/>(Mobile Control Room)"]
-    end
-
-    G -- "SQL INSERT / REPLACE<br/>(generator_user)" --> DB
-    DB -- "SQL SELECT / UPDATE<br/>(server_user)" --> S
-    S --- B
-    S --- A
-    S -- "REST API & WebSocket" --> W
-    S -- "HTTP (Local)" --> M
-    S -- "Tunnel Forward" --> T
-    T -- "HTTPS & WSS (Internet)" --> M
-    T -- "HTTPS & WSS (Internet)" --> W
+```
+branch/client
+├── server/                 ← FastAPI backend (REST + WebSocket, port 8000)
+│   ├── app/
+│   │   ├── main.py
+│   │   ├── routers/
+│   │   ├── services/
+│   │   ├── auth.py
+│   │   ├── models.py
+│   │   ├── config.py
+│   │   ├── database.py
+│   │   └── tag_meta.json
+│   ├── requirements.txt
+│   └── .env.example        ← Copy → .env, fill in DB + JWT settings
+├── client/                 ← React 18 + TypeScript + Vite + Capacitor
+│   ├── src/                ← Shared source for web AND APK
+│   ├── android/            ← Capacitor native Android project
+│   ├── package.json
+│   ├── capacitor.config.ts
+│   ├── nginx.conf          ← Production web server config
+│   └── .env.example        ← Copy → .env, set VITE_API_URL
+├── db/
+│   ├── schema.sql
+│   └── create_users.sql
+└── scripts/
+    ├── init_database.bat   ← Run ONCE if generator hasn't set up DB yet
+    ├── start_server.bat    ← FastAPI on :8000
+    ├── start_client.bat    ← Vite web on :5173
+    ├── start_all.bat       ← Both server + client together
+    ├── stop_all.bat
+    ├── start_tunnel.bat    ← Cloudflare Tunnel (remote/mobile access)
+    └── build_apk.bat       ← Full Android APK build pipeline
 ```
 
 ---
 
-## 3-Tier Architecture & Communication Contracts
+## Prerequisites
 
-| Tier | Component | Directory | Responsibility | Contract |
-| :--- | :--- | :--- | :--- | :--- |
-| **Tier 1** | **Telemetry Generator** | [`generator/`](file:///c:/Users/kusha/trends%20analysis/generator/) | Emits 60 industrial tags per second with bounded random walk and cumulative energy tracking. | Writes to `furnace_readings` and `furnace_latest` using `generator_user`. |
-| **Database** | **Local MySQL** | [`db/`](file:///c:/Users/kusha/trends%20analysis/db/) | Relational time-series and state cache storage on `127.0.0.1:3307`. | [`db/schema.sql`](file:///c:/Users/kusha/trends%20analysis/db/schema.sql) & [`db/create_users.sql`](file:///c:/Users/kusha/trends%20analysis/db/create_users.sql). |
-| **Tier 2** | **Backend Server** | [`server/`](file:///c:/Users/kusha/trends%20analysis/server/) | FastAPI REST & WebSocket backend, JWT authentication, downsampled SQL history, background alarm supervisor. | Exposes REST & WebSocket API on port 8000; never writes to readings tables. |
-| **Tier 3** | **Client & Mobile APK** | [`client/`](file:///c:/Users/kusha/trends%20analysis/client/) | Industrial dark control-room UI (React 18 + TypeScript + Vite + Tailwind) and native Android APK. | Consumes REST + WebSocket API via [`client/src/config.ts`](file:///c:/Users/kusha/trends%20analysis/client/src/config.ts). |
+- Python 3.10+
+- Node.js 18+ and npm
+- MySQL 8.x with schema initialized (see `db/schema.sql`)
+- **For APK only:** Java JDK 17 or 21 + Android Studio SDK
 
 ---
 
-## Network Ports & Exposure Rules
+## Setup
 
-| Port | Service | Bound To | Exposure Rules |
-| :--- | :--- | :--- | :--- |
-| **3307** | MySQL Database | `127.0.0.1` | **NEVER exposed.** Localhost connection only. No remote root access. |
-| **8000** | FastAPI Backend | `127.0.0.1` | Local development. Made public **ONLY** via Cloudflare Tunnel (`cloudflared`). |
-| **5173** | Vite Dev Server | `127.0.0.1` | Local developer dashboard. Proxies `/api` to port 8000. |
-| **HTTPS/WSS** | Cloudflare Public Gateway | Cloudflare Edge | Public encrypted entrypoint for mobile Android APK and remote browsers. |
+### 1 — Initialize Database *(if generator hasn't done it yet)*
 
----
-
-## Quick Start & Operating Instructions
-
-### 1. Initialize Database (First-Time Setup Only)
-Initialize database tables and least-privilege users:
 ```cmd
 scripts\init_database.bat
 ```
-*(Prompts for root MySQL password; reads user credentials dynamically from `.env` files).*
 
-### 2. Launch Platform Services
-Start all three tiers (Generator, Server, and Client) concurrently in separate managed windows:
+### 2 — Configure the Server
+
+```cmd
+copy server\.env.example server\.env
+notepad server\.env
+```
+
+| Variable | Description | Example |
+|---|---|---|
+| `DATABASE_URL` | MySQL connection string | `mysql+pymysql://server_user:pw@127.0.0.1:3307/furnace_db` |
+| `JWT_SECRET` | Random 32+ char secret key | `change_me_min_32_characters_long` |
+| `JWT_EXPIRE_MINUTES` | Token lifetime | `1440` |
+| `ADMIN_USERNAME` | First admin account | `admin` |
+| `ADMIN_PASSWORD` | First admin password | `securepassword` |
+| `CORS_ORIGINS` | Allowed browser origins | `http://localhost:5173` |
+| `WS_PUSH_INTERVAL_SECONDS` | WebSocket cadence | `1.0` |
+
+### 3 — Configure the Client
+
+```cmd
+copy client\.env.example client\.env
+```
+
+| Variable | Web (local) | APK / Remote |
+|---|---|---|
+| `VITE_API_URL` | Leave **empty** (proxied to :8000) | Set to your Cloudflare Tunnel URL e.g. `https://xxxx.trycloudflare.com` |
+
+> ⚠️ For the **APK build**, `VITE_API_URL` **must** be set to a public URL — the APK cannot reach `localhost`.
+
+### 4 — Install Dependencies
+
+```cmd
+cd server
+python -m venv venv
+venv\Scripts\pip install -r requirements.txt
+cd ..\client
+npm install
+cd ..
+```
+
+---
+
+## Run — Web Dashboard
+
 ```cmd
 scripts\start_all.bat
 ```
-*Individual launchers are available in `scripts/`:*
-- `scripts\start_generator.bat` — Emits 60 tags/sec to MySQL.
-- `scripts\start_server.bat` — Starts FastAPI server on `http://127.0.0.1:8000`.
-- `scripts\start_client.bat` — Starts Vite dev server on `http://127.0.0.1:5173`.
-- `scripts\start_tunnel.bat` — Exposes port 8000 via Cloudflare Tunnel for remote/mobile access.
 
-To stop all running services:
+| Service | URL |
+|---|---|
+| FastAPI backend + WebSocket | http://127.0.0.1:8000 |
+| React dashboard | http://127.0.0.1:5173 |
+
+For remote/mobile browser access via Cloudflare Tunnel:
 ```cmd
-scripts\stop_all.bat
+scripts\start_tunnel.bat
 ```
 
 ---
 
-## Testing & Quality Assurance
+## Build — Android APK
 
-Run all automated unit and integration tests from the repository root:
-```powershell
-.\server\venv\Scripts\python.exe -m pytest -v
+### Prerequisites
+- Java JDK 17 or 21 (`JAVA_HOME` set, or auto-detected from common install paths)
+- Android Studio with SDK (`ANDROID_HOME` set, or auto-detected from `%LOCALAPPDATA%\Android\Sdk`)
+
+### Steps
+
+**1. Set `VITE_API_URL` in `client\.env`** to your public server URL (Cloudflare Tunnel or hosted server):
+```
+VITE_API_URL=https://xxxx.trycloudflare.com
 ```
 
-Run domain-specific test suites:
-```powershell
-.\server\venv\Scripts\python.exe -m pytest generator/tests
-.\server\venv\Scripts\python.exe -m pytest server/tests
+**2. Build:**
+```cmd
+scripts\build_apk.bat
 ```
 
-Run live system diagnostics:
-- **Smoke Test**: `python scripts/smoke_test.py` (verifies live Generator -> MySQL -> Server telemetry pipeline)
-- **WebSocket Monitor**: `python scripts/ws_client.py` (verifies live WebSocket broadcasts)
+The script will:
+1. `npm run build` — compiles React to `client/dist/`
+2. `npx cap sync android` — syncs web assets into the native Android project
+3. `gradlew assembleDebug` — compiles the native APK
+4. Copies output to `releases\IEIP-Mobile.apk`
+
+**3. Install on device:**
+```cmd
+adb install releases\IEIP-Mobile.apk
+```
+Or sideload `releases\IEIP-Mobile.apk` directly (enable *Install from unknown sources* in Android settings).
 
 ---
 
-## Documentation
+## Pre-built APK
 
-Detailed documentation is available in the [`docs/`](file:///c:/Users/kusha/trends%20analysis/docs/) directory:
-- [Architecture & Design](file:///c:/Users/kusha/trends%20analysis/docs/architecture.md): Deep dive into data pipelines, tag dictionaries, and database schemas.
-- [API Reference](file:///c:/Users/kusha/trends%20analysis/docs/api.md): Complete REST & WebSocket API endpoint documentation.
-- [Operational Runbook](file:///c:/Users/kusha/trends%20analysis/docs/runbook.md): Deployment, maintenance, data retention pruning, and Android APK builds.
+A pre-built debug APK is in `releases\IEIP-Mobile.apk`.  
+> This was built against the developer's server URL. Rebuild with your own `VITE_API_URL` for production.
